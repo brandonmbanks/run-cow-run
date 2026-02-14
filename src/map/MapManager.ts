@@ -22,6 +22,10 @@ export class MapManager {
 
   /** Draw grass, tree, and rock tiles into a canvas texture. */
   private createTilesetTexture(): void {
+    if (this.scene.textures.exists(TILESET_KEY)) {
+      this.scene.textures.remove(TILESET_KEY);
+    }
+
     const tileCount = 3;
     const canvas = this.scene.textures.createCanvas(
       TILESET_KEY,

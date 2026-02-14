@@ -71,17 +71,18 @@ run_cow_run/
 - [x] Procedural obstacle placement: ~15% density, no obstacles within 5 tiles of spawn, no adjacent obstacles
 - [x] Collision via `obstacleLayer.setCollisionByExclusion([TILE_GRASS])` + `physics.add.collider(player, obstacleLayer)`
 
-### Phase 3: Knights + Chase AI
+### Phase 3: Knights + Chase AI ✅
 
 **Files:** src/entities/Knight.ts, src/ai/Pathfinder.ts, update GameScene.ts
 
-- [ ] Knight entity: red rectangle body + smaller head, circular physics body
-- [ ] Start with simple direct-chase: `Phaser.Math.Angle.Between` to get direction toward player
-- [ ] Add EasyStar.js pathfinding: extract obstacle grid, `setAcceptableTiles([-1])`, enable diagonals
-- [ ] Knights recalculate paths every 500ms (not every frame) to stay performant
-- [ ] Knight spawning: one new knight every 15s, spawning at map edges, max 8 knights
-- [ ] Catch detection: `physics.add.overlap(knightGroup, player, onCaught)` — overlap not collider, so it's a touch-catch
-- [ ] Knights collide with obstacles and each other
+- [x] Knight entity: brown horse + red torso + gray helmet + lance, circular physics body
+- [x] Direct-chase fallback: `Phaser.Math.Angle.Between` when pathfinding fails
+- [x] EasyStar.js pathfinding: obstacle grid, `setAcceptableTiles([TILE_GRASS])`, diagonals with corner-cutting disabled
+- [x] Knights recalculate paths every 500ms (not every frame) to stay performant
+- [x] Knight spawning: first at ~5s, then every 15s, at random grass tiles on map edges, max 8 knights
+- [x] Catch detection: `physics.add.overlap(knightGroup, player, onCaught)` — overlap not collider, so it's a touch-catch
+- [x] Knights collide with obstacles and each other
+- [x] All knight speeds ramp globally from 90 → 140 over time (always below player's 160)
 
 ### Phase 4: Polish + Mobile Controls
 
