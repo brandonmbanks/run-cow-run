@@ -25,19 +25,40 @@ export class Knight extends Phaser.GameObjects.Container {
     this.pathfinder = pathfinder;
     this.speed = speed;
 
-    // Horse body (brown ellipse)
-    const horse = scene.add.ellipse(0, 0, 26, 18, COLORS.knightHorse);
+    // Horse body (brown ellipse, extended forward)
+    const horseBody = scene.add.ellipse(-2, 0, 30, 16, COLORS.knightHorse);
 
-    // Knight torso (red rectangle on horse)
-    const torso = scene.add.rectangle(2, 0, 14, 16, COLORS.knight);
+    // Horse head (brown, sticking out front)
+    const horseHead = scene.add.ellipse(16, 0, 12, 10, COLORS.knightHorse);
 
-    // Helmet (gray circle)
-    const helmet = scene.add.circle(8, 0, 6, COLORS.knightArmor);
+    // Horse snout (lighter brown, extending past head)
+    const horseSnout = scene.add.ellipse(22, 0, 8, 6, 0xa0612b);
 
-    // Lance
-    const lance = scene.add.rectangle(20, 0, 16, 2, COLORS.knightArmor);
+    // Horse nostril
+    const horseNostril = scene.add.ellipse(25, 1, 2, 1.5, 0x222222);
 
-    this.add([horse, torso, helmet, lance]);
+    // Horse ear
+    const horseEar = scene.add.ellipse(20, -4, 4, 6, 0x6b3a10);
+
+    // Horse eye
+    const horseEye = scene.add.circle(19, -1, 1.5, 0x000000);
+
+    // Knight torso (red, sitting behind horse head)
+    const torso = scene.add.rectangle(-2, -4, 14, 14, COLORS.knight);
+
+    // Helmet (gray, on top of torso)
+    const helmet = scene.add.circle(2, -4, 6, COLORS.knightArmor);
+
+    // Helmet visor slit
+    const visor = scene.add.rectangle(5, -4, 3, 2, 0x222222);
+
+    // Lance (bright white, long shaft with point)
+    const lanceShaft = scene.add.rectangle(24, -4, 26, 3, 0xdddddd);
+    const lanceTip = scene.add.circle(38, -4, 3, 0xeeeeee);
+    // TODO: fix triangle positioning and use instead of circle
+    // const lanceTip = scene.add.triangle(33, -7, 0, -3, 8, 0, 0, 3, 0xeeeeee);
+
+    this.add([horseBody, horseHead, horseSnout, horseNostril, horseEar, horseEye, torso, helmet, visor, lanceShaft, lanceTip]);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
