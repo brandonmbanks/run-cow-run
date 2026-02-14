@@ -1,6 +1,6 @@
 import * as EasyStar from 'easystarjs';
 import { TILE_SIZE } from '../constants';
-import { TILE_GRASS } from '../map/MapGenerator';
+import { TILE_GRASS, TILE_DRAWBRIDGE } from '../map/MapGenerator';
 
 export class Pathfinder {
   private easystar: EasyStar.js;
@@ -8,7 +8,7 @@ export class Pathfinder {
   constructor(grid: number[][]) {
     this.easystar = new EasyStar.js();
     this.easystar.setGrid(grid);
-    this.easystar.setAcceptableTiles([TILE_GRASS]);
+    this.easystar.setAcceptableTiles([TILE_GRASS, TILE_DRAWBRIDGE]);
     this.easystar.enableDiagonals();
     this.easystar.disableCornerCutting();
     this.easystar.setIterationsPerCalculation(100);

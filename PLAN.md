@@ -32,10 +32,14 @@ run_cow_run/
     │   ├── BootScene.ts     # Asset preloading (no-op in phase 1)
     │   ├── MenuScene.ts     # Title screen, tap to start
     │   ├── GameScene.ts     # Main gameplay — the central orchestrator
-    │   └── GameOverScene.ts # Score, high score, restart
+    │   ├── GameOverScene.ts # Score, high score, restart (+ victory variant)
+    │   └── BossScene.ts    # Dragon boss fight: survive 30s of fireballs
     ├── entities/
     │   ├── Player.ts        # Cow: Container with shape children + Arcade body
-    │   └── Knight.ts        # Knight: chase AI + path following
+    │   ├── Knight.ts        # Knight: chase AI + path following
+    │   ├── Key.ts           # Collectible key: static body + bobbing tween
+    │   ├── Dragon.ts        # Boss dragon: static body at top of arena
+    │   └── Fireball.ts      # Dragon projectile: moves toward target
     ├── ai/
     │   └── Pathfinder.ts    # EasyStar.js wrapper, converts tile<->world coords
     ├── map/
@@ -84,27 +88,69 @@ run_cow_run/
 - [x] Knights collide with obstacles and each other
 - [x] All knight speeds ramp globally from 90 → 140 over time (always below player's 160)
 
-### Phase 4: Polish + Mobile Controls
+### Phase 4: Castle Structure ✅
+
+**Files:** src/constants.ts, src/map/MapGenerator.ts, src/map/MapManager.ts
+
+- [x] Add castle tile types: `TILE_CASTLE_WALL=3`, `TILE_CASTLE_ROOF=4`, `TILE_TURRET=5`, `TILE_GATE=6`, `TILE_DRAWBRIDGE=7`
+- [x] Castle dimensions (7x7), margin, and colors (wall, roof, turret, gate, drawbridge) in constants
+- [x] `placeCastle()` in MapGenerator — random corner (shuffle-then-pick-farthest), 7x7 wall ring with roof interior, turrets on 4 corners, 3-wide gate (portcullis), 3x2 drawbridge extending outward, 2-tile obstacle buffer
+- [x] Tileset canvas extended from 3→8 tiles: grass, tree, rock, castle wall (brick), roof (shingles), turret (circular tower), gate (iron bars), drawbridge (wooden planks)
+- [x] Castle walls/roof/turrets/gate collide; drawbridge is walkable (excluded from collision alongside grass)
+- [x] Pathfinder accepts drawbridge tiles so knights can walk on them
+- [x] `MapData` interface returns grid, keyPositions, gateTiles, drawbridgeTiles, castleCorner
+
+### Phase 5: Collectible Keys
+
+**Files:** src/constants.ts, src/map/MapGenerator.ts, src/entities/Key.ts, src/scenes/GameScene.ts
+
+- [x] Key constants (`KEY_COUNT=5`, distances, colors) in constants
+- [x] `placeKeys()` in MapGenerator — scatter 5 keys on grass tiles far from spawn and each other, positions returned in `MapData`
+- [ ] Key entity: yellow circle + black stroke + shaft + teeth, static body, bobbing tween
+- [ ] GameScene: key static group, overlap collection, `keysCollected` counter, HUD text (`Keys: 0/5`)
+
+### Phase 6: Gate + Castle Entry
+
+**Files:** src/scenes/GameScene.ts
+
+- [x] Gate tiles (3-wide portcullis) already placed in castle wall by MapGenerator
+- [x] Drawbridge extends outward from gate for visual clarity
+- [ ] GameScene: gate tiles collide (blocks entry). On all 5 keys → swap gate tiles to grass, flash camera gold. On overlap with gate area → `scene.start('BossScene', { score })`
+
+### Phase 7: Dragon Boss Battle
+
+**Files:** src/constants.ts, src/entities/Dragon.ts, src/entities/Fireball.ts, src/scenes/BossScene.ts, src/scenes/GameOverScene.ts, src/config.ts
+
+- [x] Boss constants (arena size, fireball speed/interval, 30s survive time) in constants
+- [ ] Dragon entity: green body, wings, eyes, horns, static
+- [ ] Fireball entity: orange-red + yellow core, moves toward target
+- [ ] BossScene: dark arena, dragon fires at player every 1.2s, escalating spread (1→2→3 fireballs), countdown HUD
+- [ ] GameOverScene: handle `{ victory: true }` with gold "VICTORY!" text
+- [ ] Register BossScene in config.ts
+
+### Phase 8: Polish + Mobile Controls
 
 **Files:** src/ui/HUD.ts, src/ui/VirtualJoystick.ts, update GameOverScene.ts, update GameScene.ts
 
 - [ ] **HUD**: survival timer + score text, pinned with `setScrollFactor(0)`
 - [ ] **Virtual joystick**: floating (appears where you touch), left 60% of screen, base circle + thumb circle, outputs normalized forceX/forceY
 - [ ] **Game over**: display survival time, track high score in localStorage, tap to restart
-- [ ] **Game feel**: screen shake on catch, knight speed increases over time (capped below player speed), brief invincibility at start
+- [ ] **Game feel**: screen shake on catch, brief invincibility at start
 - [ ] **Scoring**: survive as long as possible, score = seconds survived
 
-### Phase 5: Mobile Optimization
+### Phase 9: Mobile Optimization
 
-- [ ] Object pooling for knights via `physics.add.group({ classType: Knight, maxSize: 8, runChildUpdate: true })`
-- [ ] CSS `touch-action: none` on canvas to prevent scroll/zoom
+- [ ] Object pooling for knights
+- [ ] CSS `touch-action: none` on canvas
 - [ ] FPS counter for dev testing
-- [ ] Smaller map (30x30) on small screens
-- [ ] Increase pathfinding interval on low-end devices
+- [ ] Smaller map on small screens
 
 ## Verification
 
 1. `npm run dev` — opens at localhost:8080
-2. Desktop: WASD/arrows move the cow, knights chase, obstacles block, game over on catch, restart works
-3. Mobile: open `http://<lan-ip>:8080` on phone, virtual joystick appears on touch, smooth 60fps
-4. Progression: knights spawn over time, speed increases, score tracks survival time
+2. Castle visible in corner, collision works
+3. Keys scattered, collectible, HUD updates
+4. Gate blocks until 5 keys, then opens
+5. Boss scene: dodge fireballs 30s → victory, get hit → game over
+6. Full loop: menu → game → collect keys → enter castle → boss → victory/game over → restart
+7. Mobile: virtual joystick, smooth 60fps

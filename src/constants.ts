@@ -9,6 +9,24 @@ export const KNIGHT_SPAWN_INTERVAL = 15000; // ms
 export const KNIGHT_PATH_INTERVAL = 500; // ms
 export const MAX_KNIGHTS = 8;
 
+// Castle
+export const CASTLE_WIDTH = 7;
+export const CASTLE_HEIGHT = 7;
+export const CASTLE_MARGIN = 3;
+
+// Keys
+export const KEY_COUNT = 5;
+export const KEY_MIN_DIST_FROM_SPAWN = 12;
+export const KEY_MIN_DIST_BETWEEN = 8;
+
+// Boss
+export const BOSS_ARENA_WIDTH = 640;
+export const BOSS_ARENA_HEIGHT = 480;
+export const DRAGON_FIREBALL_SPEED = 200;
+export const DRAGON_FIRE_INTERVAL = 1200;
+export const BOSS_SURVIVE_TIME = 30000;
+export const FIREBALL_RADIUS = 8;
+
 export const COLORS = {
   grass: 0x4a8c2a,
   grassAlt: 0x3d7a22,
@@ -22,4 +40,26 @@ export const COLORS = {
   knight: 0xcc2222,
   knightArmor: 0x888888,
   knightHorse: 0x8b4513,
+  castleWall: 0x8a7d6b,
+  castleWallDark: 0x6b5e4d,
+  castleRoof: 0x7a4a3a,
+  castleRoofDark: 0x5c3328,
+  turret: 0x9a8d7b,
+  turretDark: 0x7a6d5b,
+  gate: 0x5c4033,
+  gateBars: 0x333333,
+  gateOpen: 0x4a8c2a,
+  drawbridge: 0x8b6914,
+  drawbridgeDark: 0x6b4e0e,
+  key: 0xffd700,
+  keyBorder: 0x222222,
+  dragon: 0x2d8c2a,
+  dragonBelly: 0xc8b84d,
+  dragonWing: 0x1a6b1a,
+  dragonEye: 0xff4400,
+  dragonHorn: 0x888888,
+  fireball: 0xff4500,
+  fireballCore: 0xffdd00,
+  arenaFloor: 0x333333,
+  arenaWall: 0x555555,
 };
