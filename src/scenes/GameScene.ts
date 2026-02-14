@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
-import { COLORS, MAP_SIZE } from '../constants';
+import { MapManager } from '../map/MapManager';
+import { COLORS, MAP_SIZE, MAP_TILES, TILE_SIZE } from '../constants';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
+  private mapManager!: MapManager;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>;
 
@@ -18,8 +20,21 @@ export class GameScene extends Phaser.Scene {
     // Set world bounds
     this.physics.world.setBounds(0, 0, MAP_SIZE, MAP_SIZE);
 
-    // Create player at center of map
-    this.player = new Player(this, MAP_SIZE / 2, MAP_SIZE / 2);
+    // Spawn at center of map (in tile coords)
+    const spawnCol = Math.floor(MAP_TILES / 2);
+    const spawnRow = Math.floor(MAP_TILES / 2);
+
+    // Generate and render the tilemap
+    this.mapManager = new MapManager(this);
+    this.mapManager.create(spawnCol, spawnRow);
+
+    // Create player at center of map (world coords)
+    const spawnX = spawnCol * TILE_SIZE + TILE_SIZE / 2;
+    const spawnY = spawnRow * TILE_SIZE + TILE_SIZE / 2;
+    this.player = new Player(this, spawnX, spawnY);
+
+    // Player collides with obstacles
+    this.physics.add.collider(this.player, this.mapManager.obstacleLayer);
 
     // Camera setup
     this.cameras.main.setBounds(0, 0, MAP_SIZE, MAP_SIZE);

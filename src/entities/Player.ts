@@ -8,35 +8,42 @@ export class Player extends Phaser.GameObjects.Container {
     super(scene, x, y);
 
     // Draw cow body (white ellipse)
-    const body = scene.add.ellipse(0, 0, 56, 44, COLORS.cow);
+    const body = scene.add.ellipse(0, 0, 28, 22, COLORS.cow);
 
-    // Spots on the body
-    const spot1 = scene.add.circle(-10, -6, 8, COLORS.cowSpots);
-    const spot2 = scene.add.circle(8, 4, 6, COLORS.cowSpots);
-    const spot3 = scene.add.circle(-4, 10, 6, COLORS.cowSpots);
+    // Brown patches on the body
+    const patch1 = scene.add.ellipse(-5, -4, 10, 7, 0x8B4513);
+    const patch2 = scene.add.ellipse(4, 3, 8, 6, 0x8B4513);
 
-    // Head (pinkish circle in front, centered)
-    const head = scene.add.circle(28, 0, 14, COLORS.cowHead);
+    // Head — white base with brown patch on top
+    const head = scene.add.circle(14, 0, 7, COLORS.cow);
+    const headPatch = scene.add.ellipse(12, -3, 8, 6, 0x8B4513);
 
-    // Ears (long ellipses on sides of head)
-    const earL = scene.add.ellipse(22, -20, 8, 16, 0x000000);
-    const earR = scene.add.ellipse(22, 20, 8, 16, 0x000000);
+    // Ears (brown)
+    const earL = scene.add.ellipse(11, -10, 4, 8, 0x8B4513);
+    const earR = scene.add.ellipse(11, 10, 4, 8, 0x8B4513);
+
+    // Snout (pink oval extending past head)
+    const snout = scene.add.ellipse(20, 0, 8, 6, 0xffcca0);
+
+    // Nostrils on snout
+    const nostrilL = scene.add.ellipse(21, -2, 2, 1.5, 0x222222);
+    const nostrilR = scene.add.ellipse(21, 2, 2, 1.5, 0x222222);
 
     // Eyes
-    const eyeL = scene.add.circle(32, -6, 3, 0x000000);
-    const eyeR = scene.add.circle(32, 6, 3, 0x000000);
+    const eyeL = scene.add.circle(16, -3, 1.5, 0x000000);
+    const eyeR = scene.add.circle(16, 3, 1.5, 0x000000);
 
     // Tail
-    const tail = scene.add.rectangle(-32, 0, 12, 4, COLORS.cowSpots);
+    const tail = scene.add.rectangle(-16, 0, 6, 2, 0x8B4513);
 
-    this.add([body, spot1, spot2, spot3, head, earL, earR, eyeL, eyeR, tail]);
+    this.add([body, patch1, patch2, head, headPatch, earL, earR, snout, nostrilL, nostrilR, eyeL, eyeR, tail]);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     // Set up circular physics body
-    this.body.setCircle(28);
-    this.body.setOffset(-28, -28);
+    this.body.setCircle(14);
+    this.body.setOffset(-14, -14);
     this.body.setCollideWorldBounds(true);
   }
 
