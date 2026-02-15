@@ -19,34 +19,44 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, height / 4 + 50, 'Choose Difficulty', {
+      .text(width / 2, height / 4 + 50, 'Collect keys. Escape knights. Slay the dragon.', {
+        fontSize: '16px',
+        color: '#999999',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5);
+
+    const buttons: { label: string; difficulty: DifficultyLevel; color: string; key: string }[] = [
+      { label: 'Easy   ', difficulty: 'easy', color: '#44cc44', key: '1' },
+      { label: 'Medium ', difficulty: 'medium', color: '#cccc44', key: '2' },
+      { label: 'Hard   ', difficulty: 'hard', color: '#cc4444', key: '3' },
+    ];
+
+    const startY = height / 2 + 10;
+    const spacing = 60;
+
+    this.add
+      .text(width / 2, startY - 50, 'Choose Difficulty', {
         fontSize: '20px',
         color: '#cccccc',
         fontFamily: 'monospace',
       })
       .setOrigin(0.5);
 
-    const buttons: { label: string; difficulty: DifficultyLevel; color: string; key: string }[] = [
-      { label: 'Easy', difficulty: 'easy', color: '#44cc44', key: '1' },
-      { label: 'Medium', difficulty: 'medium', color: '#cccc44', key: '2' },
-      { label: 'Hard', difficulty: 'hard', color: '#cc4444', key: '3' },
-    ];
-
-    const startY = height / 2 + 10;
-    const spacing = 60;
-
     for (let i = 0; i < buttons.length; i++) {
       const { label, difficulty, color, key } = buttons[i];
       const y = startY + i * spacing;
 
       const btn = this.add
-        .text(width / 2, y, `${label} [${key}]`, {
+        .text(width / 2, y, `${label}[${key}]`, {
           fontSize: '32px',
           color,
           fontFamily: 'monospace',
           fontStyle: 'bold',
           padding: { x: 20, y: 8 },
           backgroundColor: '#222222',
+          fixedWidth: 260,
+          align: 'center',
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });

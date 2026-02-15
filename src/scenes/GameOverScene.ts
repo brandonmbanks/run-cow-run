@@ -38,16 +38,18 @@ export class GameOverScene extends Phaser.Scene {
         .setOrigin(0.5);
     }
 
-    this.add
-      .text(width / 2, height / 2, `Survived: ${score}s`, {
-        fontSize: '28px',
-        color: '#ffffff',
-        fontFamily: 'monospace',
-      })
-      .setOrigin(0.5);
+    if (!victory) {
+      this.add
+        .text(width / 2, height / 2, `Survived: ${score}s`, {
+          fontSize: '28px',
+          color: '#ffffff',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(0.5);
+    }
 
     const restartText = this.add
-      .text(width / 2, height / 2 + 80, 'Tap or Press SPACE to Continue', {
+      .text(width / 2, victory ? height / 2 + 20 : height / 2 + 80, 'Tap or Press SPACE to Continue', {
         fontSize: '20px',
         color: '#cccccc',
         fontFamily: 'monospace',
