@@ -15,7 +15,7 @@ import {
   KNIGHT_SPEED_MAX,
   MAX_KNIGHTS,
 } from '../constants';
-import { TILE_GRASS, MapData } from '../map/MapGenerator';
+import { TILE_GRASS, TILE_DRAWBRIDGE, MapData } from '../map/MapGenerator';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -33,6 +33,7 @@ export class GameScene extends Phaser.Scene {
   private currentKey: Key | null = null;
   private keyCollider: Phaser.Physics.Arcade.Collider | null = null;
   private keysText!: Phaser.GameObjects.Text;
+  private gateOpen = false;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private debugVisible = false;
 
@@ -47,6 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.elapsedTime = 0;
     this.keysCollected = 0;
     this.currentKey = null;
+    this.gateOpen = false;
 
     // Green world background
     this.cameras.main.setBackgroundColor(COLORS.grass);
@@ -199,7 +201,61 @@ export class GameScene extends Phaser.Scene {
     this.keysCollected++;
     this.keysText.setText(`Keys: ${this.keysCollected}/${KEY_COUNT}`);
 
-    this.spawnNextKey();
+    if (this.keysCollected >= KEY_COUNT) {
+      this.openGate();
+    } else {
+      this.spawnNextKey();
+    }
+  }
+
+  private openGate(): void {
+    this.gateOpen = true;
+
+    // Swap gate tiles to drawbridge (walkable) in the tilemap
+    const layer = this.mapManager.obstacleLayer;
+    for (const gt of this.mapData.gateTiles) {
+      layer.putTileAt(TILE_DRAWBRIDGE, gt.col, gt.row);
+    }
+    // Re-apply collision rules so the new tiles are walkable
+    layer.setCollisionByExclusion([TILE_GRASS, TILE_DRAWBRIDGE]);
+
+    // Gold camera flash
+    this.cameras.main.flash(500, 255, 215, 0);
+
+    // Create a trigger zone sized to fit exactly the gate tiles
+    const cols = this.mapData.gateTiles.map((t) => t.col);
+    const rows = this.mapData.gateTiles.map((t) => t.row);
+    const minCol = Math.min(...cols);
+    const maxCol = Math.max(...cols);
+    const minRow = Math.min(...rows);
+    const maxRow = Math.max(...rows);
+
+    const zoneX = minCol * TILE_SIZE + ((maxCol - minCol + 1) * TILE_SIZE) / 2;
+    const zoneY = minRow * TILE_SIZE + ((maxRow - minRow + 1) * TILE_SIZE) / 2;
+    const zoneW = (maxCol - minCol + 1) * TILE_SIZE;
+    const zoneH = (maxRow - minRow + 1) * TILE_SIZE;
+
+    const zone = this.add.zone(zoneX, zoneY, zoneW, zoneH);
+    this.physics.add.existing(zone, true); // static body
+    this.physics.add.overlap(this.player, zone, () => this.onEnterCastle());
+  }
+
+  private onEnterCastle(): void {
+    if (this.gameOver) return;
+    this.gameOver = true;
+
+    this.player.body.setVelocity(0, 0);
+    for (const knight of this.knights) {
+      knight.body.setVelocity(0, 0);
+    }
+
+    const score = Math.floor(this.elapsedTime / 1000);
+    // BossScene not yet implemented — fall back to GameOverScene
+    if (this.scene.get('BossScene')) {
+      this.scene.start('BossScene', { score });
+    } else {
+      this.scene.start('GameOverScene', { score, victory: true });
+    }
   }
 
   private spawnKnight(): void {

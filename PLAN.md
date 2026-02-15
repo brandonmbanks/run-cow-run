@@ -110,13 +110,13 @@ run_cow_run/
 - [x] GameScene: spawn one key at a time, overlap collection with proper collider cleanup, `keysCollected` counter, HUD text (`Keys: 0/5`)
 - [x] Debug collision overlay toggled with F1
 
-### Phase 6: Gate + Castle Entry
+### Phase 6: Gate + Castle Entry ✅
 
 **Files:** src/scenes/GameScene.ts
 
 - [x] Gate tiles (3-wide portcullis) already placed in castle wall by MapGenerator
 - [x] Drawbridge extends outward from gate for visual clarity
-- [ ] GameScene: gate tiles collide (blocks entry). On all 5 keys → swap gate tiles to grass, flash camera gold. On overlap with gate area → `scene.start('BossScene', { score })`
+- [x] GameScene: gate tiles swap to drawbridge on all 5 keys, gold camera flash, tight trigger zone on gate tiles → `scene.start('BossScene', { score })` (falls back to GameOverScene until BossScene exists)
 
 ### Phase 7: Dragon Boss Battle
 
