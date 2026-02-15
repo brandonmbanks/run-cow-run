@@ -98,10 +98,18 @@ export class GameScene extends Phaser.Scene {
 
     // Camera setup — zoom out on small screens so more map is visible
     const targetViewWidth = 480;
+    const cam = this.cameras.main;
     const zoom = Math.min(this.scale.width / targetViewWidth, 1);
-    this.cameras.main.setZoom(zoom);
-    this.cameras.main.setBounds(0, 0, mapSize, mapSize);
-    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    cam.setZoom(zoom);
+    // When viewport exceeds map on an axis, expand bounds to center the map
+    const viewW = cam.width / zoom;
+    const viewH = cam.height / zoom;
+    const boundsW = Math.max(viewW, mapSize);
+    const boundsH = Math.max(viewH, mapSize);
+    const boundsX = (mapSize - boundsW) / 2;
+    const boundsY = (mapSize - boundsH) / 2;
+    cam.setBounds(boundsX, boundsY, boundsW, boundsH);
+    cam.startFollow(this.player, true, 0.08, 0.08);
 
     // Keyboard input
     this.cursors = this.input.keyboard!.createCursorKeys();

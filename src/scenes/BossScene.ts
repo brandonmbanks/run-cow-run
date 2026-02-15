@@ -64,12 +64,12 @@ export class BossScene extends Phaser.Scene {
     // If viewport fits the entire arena, center it; otherwise follow player within bounds
     const viewW = cam.width / zoom;
     const viewH = cam.height / zoom;
+    const boundsW = Math.max(viewW, BOSS_ARENA_WIDTH);
+    const boundsH = Math.max(viewH, BOSS_ARENA_HEIGHT);
+    const boundsX = (BOSS_ARENA_WIDTH - boundsW) / 2;
+    const boundsY = (BOSS_ARENA_HEIGHT - boundsH) / 2;
+    cam.setBounds(boundsX, boundsY, boundsW, boundsH);
     this.needsFollow = viewW < BOSS_ARENA_WIDTH || viewH < BOSS_ARENA_HEIGHT;
-    if (this.needsFollow) {
-      cam.setBounds(0, 0, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT);
-    } else {
-      cam.centerOn(BOSS_ARENA_WIDTH / 2, BOSS_ARENA_HEIGHT / 2);
-    }
 
     // --- Physics world bounds ---
     this.physics.world.setBounds(0, 0, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT);
