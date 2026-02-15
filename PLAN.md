@@ -166,12 +166,37 @@ run_cow_run/
 
 ### Phase 9: Polish + Mobile Controls
 
-**Files:** src/ui/HUD.ts, src/ui/VirtualJoystick.ts, update GameOverScene.ts, update GameScene.ts
+**Files:** src/constants.ts, src/ui/HUD.ts, src/ui/VirtualJoystick.ts, src/scenes/GameScene.ts, src/scenes/BossScene.ts, src/scenes/GameOverScene.ts
 
-- [ ] **HUD**: survival timer + score text, pinned with `setScrollFactor(0)`
-- [ ] **Virtual joystick**: only created on touch devices (`this.sys.game.device.input.touch`). Floating (appears where you touch), left 60% of screen, base circle + thumb circle, outputs normalized forceX/forceY. GameScene and BossScene merge joystick input with keyboard input into the same `player.move(vx, vy)` call
-- [ ] **Game over**: display survival time, tap to restart
-- [ ] **Game feel**: screen shake on catch, brief invincibility at start
+#### Constants (`src/constants.ts`)
+- [x] Add UI constants: `JOYSTICK_BASE_RADIUS=50`, `JOYSTICK_THUMB_RADIUS=25`, `JOYSTICK_BASE_ALPHA=0.3`, `JOYSTICK_THUMB_ALPHA=0.5`, `JOYSTICK_ZONE_WIDTH_PERCENT=0.6`, `HUD_FONT_SIZE=18`, `HUD_PADDING=12`, `SCREEN_SHAKE_DURATION=200`, `SCREEN_SHAKE_INTENSITY=0.01`
+
+#### HUD (`src/ui/HUD.ts`)
+- [x] Reusable HUD class with `setScrollFactor(0)` + `setDepth(100)` text elements
+- [x] `updateKeys(collected, total)` — displays `Keys: X/Y` top-left (GameScene)
+- [x] `updateDragonHearts(livesRemaining, total)` — displays filled/empty hearts top-center (BossScene). Hearts deplete as bombs are collected (e.g., `🖤🖤♡` = 1 of 3 bombs collected)
+
+#### Virtual Joystick (`src/ui/VirtualJoystick.ts`)
+- [x] Only created on touch devices (`scene.sys.game.device.input.touch`)
+- [x] Floating: appears where you touch, left 60% of screen, base circle + thumb circle
+- [x] Outputs normalized `forceX`/`forceY` (-1 to 1), `isActive` flag
+- [x] Graphics objects with `setScrollFactor(0)`, pointer ID tracking for multi-touch
+- [x] GameScene and BossScene merge joystick input with keyboard: joystick overrides when active
+
+#### GameScene Updates
+- [x] Replace inline `keysText` with `new HUD(this)`, call `hud.updateKeys()` on collection
+- [x] Create `VirtualJoystick`, merge with keyboard in `update()`
+- [x] Screen shake on catch: `cameras.main.shake(SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY)` in `onCaught()`
+- [x] Pass `keysCollected` + `keyCount` to BossScene and GameOverScene
+
+#### BossScene Updates
+- [x] Replace inline bomb text with `new HUD(this)`, call `hud.updateDragonHearts()` on bomb collection
+- [x] Create `VirtualJoystick`, merge with keyboard in `update()`
+- [x] Pass `dragonHeartsLeft` to GameOverScene on defeat
+
+#### GameOverScene Updates
+- [x] Context-aware stats: overworld defeat → `Keys: X/Y`, boss defeat → `The dragon endures with X hearts` (with heart symbols), victory → no stat (dragon is dead)
+- [x] Receive `{ victory, difficulty, keysCollected?, keyCount?, dragonHeartsLeft? }`
 
 ### Phase 10: Mobile Optimization
 

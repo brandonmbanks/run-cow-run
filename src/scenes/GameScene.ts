@@ -10,8 +10,12 @@ import {
   DIFFICULTIES,
   DifficultyLevel,
   DifficultyConfig,
+  SCREEN_SHAKE_DURATION,
+  SCREEN_SHAKE_INTENSITY,
 } from '../constants';
 import { TILE_GRASS, TILE_DRAWBRIDGE, MapData } from '../map/MapGenerator';
+import { HUD } from '../ui/HUD';
+import { VirtualJoystick } from '../ui/VirtualJoystick';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -28,7 +32,8 @@ export class GameScene extends Phaser.Scene {
   private keysCollected = 0;
   private currentKey: Key | null = null;
   private keyCollider: Phaser.Physics.Arcade.Collider | null = null;
-  private keysText!: Phaser.GameObjects.Text;
+  private hud!: HUD;
+  private joystick?: VirtualJoystick;
   private gateOpen = false;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private debugVisible = false;
@@ -89,7 +94,10 @@ export class GameScene extends Phaser.Scene {
     // Knights catch player (overlap, not collider — touch = caught)
     this.physics.add.overlap(this.knightGroup, this.player, () => this.onCaught());
 
-    // Camera setup
+    // Camera setup — zoom out on small screens so more map is visible
+    const targetViewWidth = 480;
+    const zoom = Math.min(this.scale.width / targetViewWidth, 1);
+    this.cameras.main.setZoom(zoom);
     this.cameras.main.setBounds(0, 0, mapSize, mapSize);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
@@ -103,12 +111,13 @@ export class GameScene extends Phaser.Scene {
     }) as Record<string, Phaser.Input.Keyboard.Key>;
 
     // HUD
-    this.keysText = this.add.text(16, 16, `Keys: 0/${this.config.keyCount}`, {
-      fontSize: '18px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setScrollFactor(0).setDepth(100);
+    this.hud = new HUD(this);
+    this.hud.updateKeys(0, this.config.keyCount);
+
+    // Virtual joystick (touch devices only)
+    if (this.sys.game.device.input.touch) {
+      this.joystick = new VirtualJoystick(this);
+    }
 
     // Debug collision overlay (toggle with F1)
     this.debugGfx = this.add.graphics().setDepth(99).setVisible(false);
@@ -136,6 +145,11 @@ export class GameScene extends Phaser.Scene {
 
     if (this.cursors.up.isDown || this.wasd.up.isDown) vy = -1;
     else if (this.cursors.down.isDown || this.wasd.down.isDown) vy = 1;
+
+    if (this.joystick?.isActive) {
+      vx = this.joystick.forceX;
+      vy = this.joystick.forceY;
+    }
 
     this.player.move(vx, vy);
 
@@ -203,7 +217,7 @@ export class GameScene extends Phaser.Scene {
     this.currentKey.destroy();
     this.currentKey = null;
     this.keysCollected++;
-    this.keysText.setText(`Keys: ${this.keysCollected}/${this.config.keyCount}`);
+    this.hud.updateKeys(this.keysCollected, this.config.keyCount);
 
     if (this.keysCollected >= this.config.keyCount) {
       this.openGate();
@@ -256,9 +270,9 @@ export class GameScene extends Phaser.Scene {
     const score = Math.floor(this.elapsedTime / 1000);
     // BossScene not yet implemented — fall back to GameOverScene
     if (this.scene.get('BossScene')) {
-      this.scene.start('BossScene', { score, difficulty: this.difficulty });
+      this.scene.start('BossScene', { score, difficulty: this.difficulty, keysCollected: this.keysCollected, keyCount: this.config.keyCount });
     } else {
-      this.scene.start('GameOverScene', { score, victory: true });
+      this.scene.start('GameOverScene', { score, victory: true, keysCollected: this.keysCollected, keyCount: this.config.keyCount });
     }
   }
 
@@ -307,7 +321,11 @@ export class GameScene extends Phaser.Scene {
       knight.body.setVelocity(0, 0);
     }
 
+    this.cameras.main.shake(SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY);
+
     const score = Math.floor(this.elapsedTime / 1000);
-    this.scene.start('GameOverScene', { score, difficulty: this.difficulty });
+    this.time.delayedCall(SCREEN_SHAKE_DURATION, () => {
+      this.scene.start('GameOverScene', { score, difficulty: this.difficulty, keysCollected: this.keysCollected, keyCount: this.config.keyCount });
+    });
   }
 }

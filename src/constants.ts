@@ -107,6 +107,17 @@ export const DIFFICULTIES: Record<DifficultyLevel, DifficultyConfig> = {
   },
 };
 
+// --- UI ---
+export const JOYSTICK_BASE_RADIUS = 50;
+export const JOYSTICK_THUMB_RADIUS = 25;
+export const JOYSTICK_BASE_ALPHA = 0.3;
+export const JOYSTICK_THUMB_ALPHA = 0.5;
+export const JOYSTICK_ZONE_WIDTH_PERCENT = 0.6;
+export const HUD_FONT_SIZE = 18;
+export const HUD_PADDING = 12;
+export const SCREEN_SHAKE_DURATION = 200;
+export const SCREEN_SHAKE_INTENSITY = 0.01;
+
 export const COLORS = {
   grass: 0x4a8c2a,
   grassAlt: 0x3d7a22,

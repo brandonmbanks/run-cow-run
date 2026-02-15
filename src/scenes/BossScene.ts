@@ -13,6 +13,8 @@ import {
   DifficultyLevel,
   DifficultyConfig,
 } from '../constants';
+import { HUD } from '../ui/HUD';
+import { VirtualJoystick } from '../ui/VirtualJoystick';
 
 const WALL_THICKNESS = 16;
 
@@ -27,8 +29,11 @@ export class BossScene extends Phaser.Scene {
   private bombsCollected = 0;
   private currentBomb: Phaser.GameObjects.Container | null = null;
   private bombCollider: Phaser.Physics.Arcade.Collider | null = null;
-  private hudText!: Phaser.GameObjects.Text;
+  private hud!: HUD;
+  private joystick?: VirtualJoystick;
   private score = 0;
+  private keysCollected = 0;
+  private keyCount = 0;
   private isOver = false;
   private difficulty: DifficultyLevel = 'medium';
   private config!: DifficultyConfig;
@@ -37,10 +42,12 @@ export class BossScene extends Phaser.Scene {
     super({ key: 'BossScene' });
   }
 
-  create(data: { score?: number; difficulty?: DifficultyLevel }): void {
+  create(data: { score?: number; difficulty?: DifficultyLevel; keysCollected?: number; keyCount?: number }): void {
     this.difficulty = data.difficulty ?? 'medium';
     this.config = DIFFICULTIES[this.difficulty];
     this.score = data.score ?? 0;
+    this.keysCollected = data.keysCollected ?? 0;
+    this.keyCount = data.keyCount ?? 0;
     this.isOver = false;
     this.bombTimer = 0;
     this.bombsCollected = 0;
@@ -127,13 +134,14 @@ export class BossScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
     }) as Record<string, Phaser.Input.Keyboard.Key>;
 
-    // --- HUD ---
-    this.hudText = this.add.text(16, 16, `Bombs: 0/${BOMBS_TO_WIN}`, {
-      fontSize: '18px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setScrollFactor(0).setDepth(100);
+    // --- HUD (dragon hearts) ---
+    this.hud = new HUD(this);
+    this.hud.updateDragonHearts(BOMBS_TO_WIN, BOMBS_TO_WIN);
+
+    // --- Virtual joystick (touch devices only) ---
+    if (this.sys.game.device.input.touch) {
+      this.joystick = new VirtualJoystick(this);
+    }
   }
 
   update(time: number, delta: number): void {
@@ -146,6 +154,12 @@ export class BossScene extends Phaser.Scene {
     else if (this.cursors.right.isDown || this.wasd.right.isDown) vx = 1;
     if (this.cursors.up.isDown || this.wasd.up.isDown) vy = -1;
     else if (this.cursors.down.isDown || this.wasd.down.isDown) vy = 1;
+
+    if (this.joystick?.isActive) {
+      vx = this.joystick.forceX;
+      vy = this.joystick.forceY;
+    }
+
     this.player.move(vx, vy);
 
     // --- Dragon AI ---
@@ -237,7 +251,7 @@ export class BossScene extends Phaser.Scene {
     this.currentBomb = null;
     this.bombsCollected++;
     this.cameras.main.flash(200, 255, 150, 0);
-    this.hudText.setText(`Bombs: ${this.bombsCollected}/${BOMBS_TO_WIN}`);
+    this.hud.updateDragonHearts(BOMBS_TO_WIN - this.bombsCollected, BOMBS_TO_WIN);
     this.bombTimer = 0;
 
     if (this.bombsCollected >= BOMBS_TO_WIN) {
@@ -254,7 +268,14 @@ export class BossScene extends Phaser.Scene {
 
     this.cameras.main.flash(300, 255, 0, 0);
     this.time.delayedCall(500, () => {
-      this.scene.start('GameOverScene', { score: this.score, victory: false, difficulty: this.difficulty });
+      this.scene.start('GameOverScene', {
+        score: this.score,
+        victory: false,
+        difficulty: this.difficulty,
+        keysCollected: this.keysCollected,
+        keyCount: this.keyCount,
+        dragonHeartsLeft: BOMBS_TO_WIN - this.bombsCollected,
+      });
     });
   }
 
@@ -267,7 +288,13 @@ export class BossScene extends Phaser.Scene {
 
     this.cameras.main.flash(500, 255, 215, 0);
     this.time.delayedCall(800, () => {
-      this.scene.start('GameOverScene', { score: this.score, victory: true, difficulty: this.difficulty });
+      this.scene.start('GameOverScene', {
+        score: this.score,
+        victory: true,
+        difficulty: this.difficulty,
+        keysCollected: this.keysCollected,
+        keyCount: this.keyCount,
+      });
     });
   }
 }
