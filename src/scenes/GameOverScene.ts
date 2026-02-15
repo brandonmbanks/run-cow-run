@@ -5,18 +5,38 @@ export class GameOverScene extends Phaser.Scene {
     super({ key: 'GameOverScene' });
   }
 
-  create(data: { score?: number }): void {
+  create(data: { score?: number; victory?: boolean }): void {
     const { width, height } = this.scale;
     const score = data.score ?? 0;
+    const victory = data.victory ?? false;
 
-    this.add
-      .text(width / 2, height / 3, 'Game Over!', {
-        fontSize: '48px',
-        color: '#ff4444',
-        fontFamily: 'monospace',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5);
+    if (victory) {
+      this.add
+        .text(width / 2, height / 3 - 20, 'VICTORY!', {
+          fontSize: '48px',
+          color: '#ffd700',
+          fontFamily: 'monospace',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5);
+
+      this.add
+        .text(width / 2, height / 3 + 30, 'The dragon is defeated!', {
+          fontSize: '22px',
+          color: '#ffffff',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(0.5);
+    } else {
+      this.add
+        .text(width / 2, height / 3, 'Game Over!', {
+          fontSize: '48px',
+          color: '#ff4444',
+          fontFamily: 'monospace',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5);
+    }
 
     this.add
       .text(width / 2, height / 2, `Survived: ${score}s`, {

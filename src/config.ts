@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { MenuScene } from './scenes/MenuScene';
 import { GameScene } from './scenes/GameScene';
+import { BossScene } from './scenes/BossScene';
 import { GameOverScene } from './scenes/GameOverScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -19,6 +20,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, MenuScene, GameScene, GameOverScene],
+  scene: [BootScene, MenuScene, GameScene, BossScene, GameOverScene],
   backgroundColor: '#000000',
 };

@@ -19,13 +19,29 @@ export const KEY_COUNT = 5;
 export const KEY_MIN_DIST_FROM_SPAWN = 12;
 export const KEY_MIN_DIST_BETWEEN = 8;
 
-// Boss
+// Boss arena
 export const BOSS_ARENA_WIDTH = 640;
 export const BOSS_ARENA_HEIGHT = 480;
-export const DRAGON_FIREBALL_SPEED = 200;
-export const DRAGON_FIRE_INTERVAL = 1200;
-export const BOSS_SURVIVE_TIME = 30000;
 export const FIREBALL_RADIUS = 8;
+export const DRAGON_FIREBALL_SPEED = 200;
+
+// Dragon
+export const DRAGON_SPEED = 70;
+export const DRAGON_BODY_RADIUS = 24;
+export const TRIPLE_FIREBALL_SPREAD = 0.35; // radians (~20°)
+export const ROLL_TELEGRAPH_DURATION = 500;
+export const ROLL_SPEED = 350;
+export const ROLL_DURATION = 800;
+export const SPIN_ATTACK_DURATION = 2000;
+export const SPIN_FIREBALL_COUNT = 12;
+export const SPIN_REVOLUTIONS = 2;
+export const ATTACK_COOLDOWN_MIN = 2000;
+export const ATTACK_COOLDOWN_MAX = 3500;
+
+// Bombs
+export const BOMB_SPAWN_INTERVAL = 30000;
+export const BOMBS_TO_WIN = 3;
+export const BOMB_RADIUS = 12;
 
 export const COLORS = {
   grass: 0x4a8c2a,
@@ -56,10 +72,13 @@ export const COLORS = {
   dragon: 0x2d8c2a,
   dragonBelly: 0xc8b84d,
   dragonWing: 0x1a6b1a,
-  dragonEye: 0xff4400,
+  dragonEye: 0xff0000,
   dragonHorn: 0x888888,
   fireball: 0xff4500,
   fireballCore: 0xffdd00,
   arenaFloor: 0x333333,
   arenaWall: 0x555555,
+  bomb: 0x111111,
+  bombFuse: 0xff6600,
+  bombSpark: 0xffff00,
 };

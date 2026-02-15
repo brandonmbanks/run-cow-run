@@ -118,16 +118,16 @@ run_cow_run/
 - [x] Drawbridge extends outward from gate for visual clarity
 - [x] GameScene: gate tiles swap to drawbridge on all 5 keys, gold camera flash, tight trigger zone on gate tiles → `scene.start('BossScene', { score })` (falls back to GameOverScene until BossScene exists)
 
-### Phase 7: Dragon Boss Battle
+### Phase 7: Dragon Boss Battle ✅
 
 **Files:** src/constants.ts, src/entities/Dragon.ts, src/entities/Fireball.ts, src/scenes/BossScene.ts, src/scenes/GameOverScene.ts, src/config.ts
 
-- [x] Boss constants (arena size, fireball speed/interval, 30s survive time) in constants
-- [ ] Dragon entity: green body, wings, eyes, horns, static
-- [ ] Fireball entity: orange-red + yellow core, moves toward target
-- [ ] BossScene: dark arena, dragon fires at player every 1.2s, escalating spread (1→2→3 fireballs), countdown HUD
-- [ ] GameOverScene: handle `{ victory: true }` with gold "VICTORY!" text
-- [ ] Register BossScene in config.ts
+- [x] Boss constants (arena size, dragon speed/radius, attack timings, bomb constants, colors) in constants
+- [x] Dragon entity: green body, wings, red eyes, horns, tail — 6-state AI (IDLE, TRIPLE_FIREBALL, ROLL_TELEGRAPH, ROLLING, STUNNED, SPIN_ATTACK)
+- [x] Fireball entity: orange-red + yellow core, travels in straight line at given angle
+- [x] BossScene: dark 640×480 arena with walls, dragon chases player with 3 attack patterns, bomb collection mechanic (3 bombs to win, 30s spawn interval)
+- [x] GameOverScene: handle `{ victory: true }` with gold "VICTORY!" text + subtitle
+- [x] Register BossScene in config.ts
 
 ### Phase 8: Polish + Mobile Controls
 
