@@ -65,36 +65,52 @@ export class Dragon extends Phaser.GameObjects.Container {
     this.cooldown = this.randomCooldown();
 
     // --- Visual: top-down dragon ---
+    const parts: Phaser.GameObjects.GameObject[] = [];
 
     // Tail (thin, trailing behind)
-    const tail = scene.add.rectangle(-30, 0, 20, 4, COLORS.dragon);
+    parts.push(scene.add.rectangle(-30, 0, 20, 4, COLORS.dragon));
 
     // Wings (dark-green ellipses, angled out)
     const wingL = scene.add.ellipse(-4, -18, 20, 10, COLORS.dragonWing);
     wingL.setAngle(-20);
+    parts.push(wingL);
     const wingR = scene.add.ellipse(-4, 18, 20, 10, COLORS.dragonWing);
     wingR.setAngle(20);
+    parts.push(wingR);
 
     // Main body (large green ellipse)
     this.bodyShape = scene.add.ellipse(0, 0, 44, 28, COLORS.dragon);
+    parts.push(this.bodyShape);
 
     // Belly overlay (yellow-green)
-    const belly = scene.add.ellipse(2, 0, 30, 16, COLORS.dragonBelly);
+    parts.push(scene.add.ellipse(2, 0, 30, 16, COLORS.dragonBelly));
 
-    // Head (green circle, forward)
-    const head = scene.add.circle(22, 0, 10, COLORS.dragon);
+    // Neck (narrows between body and head)
+    parts.push(scene.add.ellipse(16, 0, 16, 14, COLORS.dragon));
+
+    // Head (green circle, pushed forward)
+    parts.push(scene.add.circle(28, 0, 10, COLORS.dragon));
 
     // Horns (gray)
-    const hornL = scene.add.rectangle(26, -8, 4, 10, COLORS.dragonHorn);
+    const hornL = scene.add.rectangle(32, -8, 4, 10, COLORS.dragonHorn);
     hornL.setAngle(-15);
-    const hornR = scene.add.rectangle(26, 8, 4, 10, COLORS.dragonHorn);
+    parts.push(hornL);
+    const hornR = scene.add.rectangle(32, 8, 4, 10, COLORS.dragonHorn);
     hornR.setAngle(15);
+    parts.push(hornR);
+
+    // Snout (elongated, dragon-like)
+    parts.push(scene.add.ellipse(40, 0, 16, 8, COLORS.dragonBelly));
+    parts.push(scene.add.ellipse(39, 0, 14, 9, COLORS.dragon));
+    // Nostrils
+    parts.push(scene.add.circle(45, -2, 1.5, COLORS.dragon));
+    parts.push(scene.add.circle(45, 2, 1.5, COLORS.dragon));
 
     // Red eyes
-    const eyeL = scene.add.circle(26, -4, 2.5, COLORS.dragonEye);
-    const eyeR = scene.add.circle(26, 4, 2.5, COLORS.dragonEye);
+    parts.push(scene.add.circle(32, -4, 2.5, COLORS.dragonEye));
+    parts.push(scene.add.circle(32, 4, 2.5, COLORS.dragonEye));
 
-    this.add([tail, wingL, wingR, this.bodyShape, belly, head, hornL, hornR, eyeL, eyeR]);
+    this.add(parts);
 
     scene.add.existing(this as Phaser.GameObjects.Container);
     scene.physics.add.existing(this as Phaser.GameObjects.Container);
