@@ -16,6 +16,7 @@ import {
 import { TILE_GRASS, TILE_DRAWBRIDGE, MapData } from '../map/MapGenerator';
 import { HUD } from '../ui/HUD';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
+import { EdgeGlow } from '../ui/EdgeGlow';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private keyCollider: Phaser.Physics.Arcade.Collider | null = null;
   private hud!: HUD;
   private joystick?: VirtualJoystick;
+  private edgeGlow?: EdgeGlow;
   private gateOpen = false;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private debugVisible = false;
@@ -114,9 +116,10 @@ export class GameScene extends Phaser.Scene {
     this.hud = new HUD(this);
     this.hud.updateKeys(0, this.config.keyCount);
 
-    // Virtual joystick (touch devices only)
+    // Virtual joystick + edge glow (touch devices only)
     if (this.sys.game.device.input.touch) {
       this.joystick = new VirtualJoystick(this);
+      this.edgeGlow = new EdgeGlow(this);
     }
 
     // Debug collision overlay (toggle with F1)
@@ -152,6 +155,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.player.move(vx, vy);
+
+    // Edge glow pointing toward current key
+    if (this.edgeGlow) {
+      if (this.currentKey) {
+        this.edgeGlow.update(this.currentKey.x, this.currentKey.y);
+      } else {
+        this.edgeGlow.hide();
+      }
+    }
 
     // Process pathfinding calculations
     this.pathfinder.update();

@@ -16,7 +16,7 @@ import {
 import { HUD } from '../ui/HUD';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
 
-const WALL_THICKNESS = 16;
+const WALL_THICKNESS = 28;
 
 export class BossScene extends Phaser.Scene {
   private player!: Player;
@@ -35,6 +35,7 @@ export class BossScene extends Phaser.Scene {
   private keysCollected = 0;
   private keyCount = 0;
   private isOver = false;
+  private needsFollow = false;
   private difficulty: DifficultyLevel = 'medium';
   private config!: DifficultyConfig;
 
@@ -54,28 +55,66 @@ export class BossScene extends Phaser.Scene {
     this.currentBomb = null;
     this.bombCollider = null;
 
-    // --- Camera: fixed, auto-zoom to fit arena ---
+    // --- Camera: match game scene zoom ---
     const cam = this.cameras.main;
     cam.setBackgroundColor(COLORS.arenaFloor);
-    const zoomX = cam.width / BOSS_ARENA_WIDTH;
-    const zoomY = cam.height / BOSS_ARENA_HEIGHT;
-    const zoom = Math.min(zoomX, zoomY, 1);
+    const targetViewWidth = 480;
+    const zoom = Math.min(cam.width / targetViewWidth, 1);
     cam.setZoom(zoom);
-    cam.centerOn(BOSS_ARENA_WIDTH / 2, BOSS_ARENA_HEIGHT / 2);
+    // If viewport fits the entire arena, center it; otherwise follow player within bounds
+    const viewW = cam.width / zoom;
+    const viewH = cam.height / zoom;
+    this.needsFollow = viewW < BOSS_ARENA_WIDTH || viewH < BOSS_ARENA_HEIGHT;
+    if (this.needsFollow) {
+      cam.setBounds(0, 0, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT);
+    } else {
+      cam.centerOn(BOSS_ARENA_WIDTH / 2, BOSS_ARENA_HEIGHT / 2);
+    }
 
     // --- Physics world bounds ---
     this.physics.world.setBounds(0, 0, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT);
 
-    // --- Arena floor ---
-    this.add.rectangle(
-      BOSS_ARENA_WIDTH / 2,
-      BOSS_ARENA_HEIGHT / 2,
-      BOSS_ARENA_WIDTH,
-      BOSS_ARENA_HEIGHT,
-      COLORS.arenaFloor,
-    );
+    // --- Arena textures ---
+    this.createArenaTextures();
 
-    // --- Walls (static physics bodies) ---
+    // Tiled floor
+    const floorTile = this.add.tileSprite(
+      BOSS_ARENA_WIDTH / 2, BOSS_ARENA_HEIGHT / 2,
+      BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT,
+      'arena-floor',
+    );
+    floorTile.setDepth(-1);
+
+    // Vignette overlay — dark gradient around edges for depth
+    const vignette = this.add.graphics().setDepth(0);
+    const vignetteInset = WALL_THICKNESS;
+    const innerW = BOSS_ARENA_WIDTH - vignetteInset * 2;
+    const innerH = BOSS_ARENA_HEIGHT - vignetteInset * 2;
+    // Draw darkening bands from edges inward
+    const bands = 6;
+    for (let i = 0; i < bands; i++) {
+      const alpha = 0.12 * (1 - i / bands);
+      const expand = (bands - i) * 8;
+      vignette.fillStyle(0x000000, alpha);
+      vignette.fillRect(
+        vignetteInset + i * 8, vignetteInset + i * 8,
+        innerW - i * 16, expand,
+      );
+      vignette.fillRect(
+        vignetteInset + i * 8, BOSS_ARENA_HEIGHT - vignetteInset - i * 8 - expand,
+        innerW - i * 16, expand,
+      );
+      vignette.fillRect(
+        vignetteInset + i * 8, vignetteInset + i * 8,
+        expand, innerH - i * 16,
+      );
+      vignette.fillRect(
+        BOSS_ARENA_WIDTH - vignetteInset - i * 8 - expand, vignetteInset + i * 8,
+        expand, innerH - i * 16,
+      );
+    }
+
+    // --- Walls (static physics bodies with brick texture) ---
     this.walls = this.physics.add.staticGroup();
     // Top
     this.addWall(BOSS_ARENA_WIDTH / 2, WALL_THICKNESS / 2, BOSS_ARENA_WIDTH, WALL_THICKNESS);
@@ -90,6 +129,9 @@ export class BossScene extends Phaser.Scene {
     this.player = new Player(this, 320, 430);
     this.player.body.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, this.walls);
+    if (this.needsFollow) {
+      cam.startFollow(this.player, true, 0.08, 0.08);
+    }
 
     // --- Dragon (top-center) ---
     const dragonCfg: DragonConfig = {
@@ -184,9 +226,44 @@ export class BossScene extends Phaser.Scene {
   }
 
   private addWall(x: number, y: number, w: number, h: number): void {
-    const wall = this.add.rectangle(x, y, w, h, COLORS.arenaWall);
+    const wall = this.add.tileSprite(x, y, w, h, 'arena-wall');
     this.physics.add.existing(wall, true);
     this.walls.add(wall);
+  }
+
+  private createArenaTextures(): void {
+    const rgba = (c: number) => Phaser.Display.Color.IntegerToColor(c).rgba;
+
+    // --- Floor texture (32x32 marble tile, lighter for contrast) ---
+    if (this.textures.exists('arena-floor')) this.textures.remove('arena-floor');
+    const floorCanvas = this.textures.createCanvas('arena-floor', 32, 32)!;
+    const fc = floorCanvas.context;
+    fc.fillStyle = rgba(COLORS.arenaFloor);
+    fc.fillRect(0, 0, 32, 32);
+    // Subtle marble veins
+    fc.strokeStyle = 'rgba(255,255,255,0.04)';
+    fc.lineWidth = 1;
+    fc.beginPath(); fc.moveTo(4, 0); fc.quadraticCurveTo(16, 18, 28, 6); fc.stroke();
+    fc.beginPath(); fc.moveTo(0, 20); fc.quadraticCurveTo(14, 26, 32, 18); fc.stroke();
+    // Tile edge seam
+    fc.strokeStyle = 'rgba(0,0,0,0.1)';
+    fc.strokeRect(0.5, 0.5, 31, 31);
+    floorCanvas.refresh();
+
+    // --- Wall texture (16x16 dark stone) ---
+    if (this.textures.exists('arena-wall')) this.textures.remove('arena-wall');
+    const wallCanvas = this.textures.createCanvas('arena-wall', 16, 16)!;
+    const wc = wallCanvas.context;
+    wc.fillStyle = rgba(COLORS.arenaWall);
+    wc.fillRect(0, 0, 16, 16);
+    // Subtle mortar lines
+    wc.strokeStyle = 'rgba(255,255,255,0.06)';
+    wc.lineWidth = 1;
+    wc.beginPath(); wc.moveTo(0, 8); wc.lineTo(16, 8); wc.stroke();
+    wc.beginPath(); wc.moveTo(8, 0); wc.lineTo(8, 8); wc.stroke();
+    wc.beginPath(); wc.moveTo(4, 8); wc.lineTo(4, 16); wc.stroke();
+    wc.beginPath(); wc.moveTo(12, 8); wc.lineTo(12, 16); wc.stroke();
+    wallCanvas.refresh();
   }
 
   private spawnFireball(x: number, y: number, angle: number, speed?: number): void {
