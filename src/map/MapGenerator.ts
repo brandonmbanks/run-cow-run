@@ -1,4 +1,4 @@
-import { MAP_TILES, CASTLE_WIDTH, CASTLE_HEIGHT, CASTLE_MARGIN, KEY_COUNT, KEY_MIN_DIST_FROM_SPAWN, KEY_MIN_DIST_BETWEEN } from '../constants';
+import { CASTLE_WIDTH, CASTLE_HEIGHT, CASTLE_MARGIN, KEY_MIN_DIST_FROM_SPAWN, KEY_MIN_DIST_BETWEEN } from '../constants';
 
 /** Tile indices */
 export const TILE_GRASS = 0;
@@ -24,35 +24,36 @@ export interface MapData {
 export function generateMap(
   spawnCol: number,
   spawnRow: number,
+  mapTiles: number,
+  obstacleDensity: number,
+  keyCount: number,
   clearRadius = 5,
 ): MapData {
   const grid: number[][] = [];
 
   // Fill with grass
-  for (let r = 0; r < MAP_TILES; r++) {
+  for (let r = 0; r < mapTiles; r++) {
     grid[r] = [];
-    for (let c = 0; c < MAP_TILES; c++) {
+    for (let c = 0; c < mapTiles; c++) {
       grid[r][c] = TILE_GRASS;
     }
   }
 
   // Rock border
-  for (let r = 0; r < MAP_TILES; r++) {
-    for (let c = 0; c < MAP_TILES; c++) {
-      if (r === 0 || r === MAP_TILES - 1 || c === 0 || c === MAP_TILES - 1) {
+  for (let r = 0; r < mapTiles; r++) {
+    for (let c = 0; c < mapTiles; c++) {
+      if (r === 0 || r === mapTiles - 1 || c === 0 || c === mapTiles - 1) {
         grid[r][c] = TILE_ROCK;
       }
     }
   }
 
   // Place castle first (before obstacles so buffer clearing works)
-  const castleResult = placeCastle(grid, spawnCol, spawnRow);
+  const castleResult = placeCastle(grid, spawnCol, spawnRow, mapTiles);
 
   // Place random obstacles in the interior
-  const obstacleDensity = 0.15;
-
-  for (let r = 1; r < MAP_TILES - 1; r++) {
-    for (let c = 1; c < MAP_TILES - 1; c++) {
+  for (let r = 1; r < mapTiles - 1; r++) {
+    for (let c = 1; c < mapTiles - 1; c++) {
       const dr = Math.abs(r - spawnRow);
       const dc = Math.abs(c - spawnCol);
       if (dr <= clearRadius && dc <= clearRadius) continue;
@@ -75,7 +76,7 @@ export function generateMap(
   }
 
   // Place keys
-  const keyPositions = placeKeys(grid, spawnCol, spawnRow, castleResult.castleCorner);
+  const keyPositions = placeKeys(grid, spawnCol, spawnRow, castleResult.castleCorner, mapTiles, keyCount);
 
   return {
     grid,
@@ -94,13 +95,14 @@ function placeCastle(
   grid: number[][],
   spawnCol: number,
   spawnRow: number,
+  mapTiles: number,
 ): { gateTiles: { col: number; row: number }[]; drawbridgeTiles: { col: number; row: number }[]; castleCorner: { col: number; row: number } } {
   const margin = CASTLE_MARGIN;
   const corners = [
     { col: margin, row: margin },
-    { col: MAP_TILES - CASTLE_WIDTH - margin, row: margin },
-    { col: margin, row: MAP_TILES - CASTLE_HEIGHT - margin },
-    { col: MAP_TILES - CASTLE_WIDTH - margin, row: MAP_TILES - CASTLE_HEIGHT - margin },
+    { col: mapTiles - CASTLE_WIDTH - margin, row: margin },
+    { col: margin, row: mapTiles - CASTLE_HEIGHT - margin },
+    { col: mapTiles - CASTLE_WIDTH - margin, row: mapTiles - CASTLE_HEIGHT - margin },
   ];
 
   // Shuffle first so equal distances get random pick
@@ -147,7 +149,7 @@ function placeCastle(
   // Determine gate wall face: the one closest to map center
   const castleCenterCol = startCol + Math.floor(CASTLE_WIDTH / 2);
   const castleCenterRow = startRow + Math.floor(CASTLE_HEIGHT / 2);
-  const mapCenter = Math.floor(MAP_TILES / 2);
+  const mapCenter = Math.floor(mapTiles / 2);
 
   const dLeft = Math.abs(startCol - mapCenter);
   const dRight = Math.abs(endCol - mapCenter);
@@ -187,7 +189,7 @@ function placeCastle(
     for (const gt of gateTiles) {
       const bc = gt.col + dc * depth;
       const br = gt.row + dr * depth;
-      if (br >= 0 && br < MAP_TILES && bc >= 0 && bc < MAP_TILES) {
+      if (br >= 0 && br < mapTiles && bc >= 0 && bc < mapTiles) {
         grid[br][bc] = TILE_DRAWBRIDGE;
         drawbridgeTiles.push({ col: bc, row: br });
       }
@@ -198,7 +200,7 @@ function placeCastle(
   const buffer = 2;
   for (let r = startRow - buffer; r <= endRow + buffer; r++) {
     for (let c = startCol - buffer; c <= endCol + buffer; c++) {
-      if (r < 0 || r >= MAP_TILES || c < 0 || c >= MAP_TILES) continue;
+      if (r < 0 || r >= mapTiles || c < 0 || c >= mapTiles) continue;
       const tile = grid[r][c];
       // Only clear grass/tree tiles in the buffer zone (not castle/drawbridge/rock)
       if (tile === TILE_TREE) {
@@ -222,10 +224,12 @@ function placeKeys(
   spawnCol: number,
   spawnRow: number,
   castleCorner: { col: number; row: number },
+  mapTiles: number,
+  keyCount: number,
 ): { col: number; row: number }[] {
   const eligible: { col: number; row: number }[] = [];
-  for (let r = 1; r < MAP_TILES - 1; r++) {
-    for (let c = 1; c < MAP_TILES - 1; c++) {
+  for (let r = 1; r < mapTiles - 1; r++) {
+    for (let c = 1; c < mapTiles - 1; c++) {
       if (grid[r][c] !== TILE_GRASS) continue;
 
       const dist = Math.abs(c - spawnCol) + Math.abs(r - spawnRow);
@@ -247,7 +251,7 @@ function placeKeys(
 
   const positions: { col: number; row: number }[] = [];
   for (const tile of eligible) {
-    if (positions.length >= KEY_COUNT) break;
+    if (positions.length >= keyCount) break;
 
     const tooClose = positions.some((p) => {
       const d = Math.abs(p.col - tile.col) + Math.abs(p.row - tile.row);

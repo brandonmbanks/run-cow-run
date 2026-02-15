@@ -6,14 +6,10 @@ import { MapManager } from '../map/MapManager';
 import { Pathfinder } from '../ai/Pathfinder';
 import {
   COLORS,
-  MAP_SIZE,
-  MAP_TILES,
   TILE_SIZE,
-  KEY_COUNT,
-  KNIGHT_SPAWN_INTERVAL,
-  KNIGHT_SPEED_BASE,
-  KNIGHT_SPEED_MAX,
-  MAX_KNIGHTS,
+  DIFFICULTIES,
+  DifficultyLevel,
+  DifficultyConfig,
 } from '../constants';
 import { TILE_GRASS, TILE_DRAWBRIDGE, MapData } from '../map/MapGenerator';
 
@@ -36,15 +32,23 @@ export class GameScene extends Phaser.Scene {
   private gateOpen = false;
   private debugGfx!: Phaser.GameObjects.Graphics;
   private debugVisible = false;
+  private difficulty: DifficultyLevel = 'medium';
+  private config!: DifficultyConfig;
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
-  create(): void {
+  create(data: { difficulty?: DifficultyLevel }): void {
+    this.difficulty = data.difficulty ?? 'medium';
+    this.config = DIFFICULTIES[this.difficulty];
+
+    const mapTiles = this.config.mapTiles;
+    const mapSize = TILE_SIZE * mapTiles;
+
     this.gameOver = false;
     this.knights = [];
-    this.spawnTimer = KNIGHT_SPAWN_INTERVAL - 5000;
+    this.spawnTimer = this.config.knightSpawnInterval - this.config.firstKnightDelay;
     this.elapsedTime = 0;
     this.keysCollected = 0;
     this.currentKey = null;
@@ -54,15 +58,15 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(COLORS.grass);
 
     // Set world bounds
-    this.physics.world.setBounds(0, 0, MAP_SIZE, MAP_SIZE);
+    this.physics.world.setBounds(0, 0, mapSize, mapSize);
 
     // Spawn at center of map
-    const spawnCol = Math.floor(MAP_TILES / 2);
-    const spawnRow = Math.floor(MAP_TILES / 2);
+    const spawnCol = Math.floor(mapTiles / 2);
+    const spawnRow = Math.floor(mapTiles / 2);
 
     // Generate and render the tilemap
     this.mapManager = new MapManager(this);
-    this.mapData = this.mapManager.create(spawnCol, spawnRow);
+    this.mapData = this.mapManager.create(spawnCol, spawnRow, mapTiles, this.config.obstacleDensity, this.config.keyCount);
 
     // Create pathfinder from obstacle grid
     this.pathfinder = new Pathfinder(this.mapManager.grid);
@@ -86,7 +90,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.knightGroup, this.player, () => this.onCaught());
 
     // Camera setup
-    this.cameras.main.setBounds(0, 0, MAP_SIZE, MAP_SIZE);
+    this.cameras.main.setBounds(0, 0, mapSize, mapSize);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
     // Keyboard input
@@ -99,7 +103,7 @@ export class GameScene extends Phaser.Scene {
     }) as Record<string, Phaser.Input.Keyboard.Key>;
 
     // HUD
-    this.keysText = this.add.text(16, 16, `Keys: 0/${KEY_COUNT}`, {
+    this.keysText = this.add.text(16, 16, `Keys: 0/${this.config.keyCount}`, {
       fontSize: '18px',
       color: '#ffffff',
       stroke: '#000000',
@@ -140,7 +144,7 @@ export class GameScene extends Phaser.Scene {
 
     // Update knight speeds and movement
     const elapsed = this.elapsedTime / 1000;
-    const speed = Math.min(KNIGHT_SPEED_BASE + elapsed * 0.5, KNIGHT_SPEED_MAX);
+    const speed = Math.min(this.config.knightSpeedBase + elapsed * 0.5, this.config.knightSpeedMax);
     for (const knight of this.knights) {
       knight.setSpeed(speed);
       knight.step(time, delta);
@@ -148,7 +152,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spawn knights periodically
     this.spawnTimer += delta;
-    if (this.spawnTimer >= KNIGHT_SPAWN_INTERVAL && this.knights.length < MAX_KNIGHTS) {
+    if (this.spawnTimer >= this.config.knightSpawnInterval && this.knights.length < this.config.maxKnights) {
       this.spawnTimer = 0;
       this.spawnKnight();
     }
@@ -177,7 +181,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnNextKey(): void {
-    if (this.keysCollected >= KEY_COUNT) return;
+    if (this.keysCollected >= this.config.keyCount) return;
 
     const pos = this.mapData.keyPositions[this.keysCollected];
     const px = pos.col * TILE_SIZE + TILE_SIZE / 2;
@@ -199,9 +203,9 @@ export class GameScene extends Phaser.Scene {
     this.currentKey.destroy();
     this.currentKey = null;
     this.keysCollected++;
-    this.keysText.setText(`Keys: ${this.keysCollected}/${KEY_COUNT}`);
+    this.keysText.setText(`Keys: ${this.keysCollected}/${this.config.keyCount}`);
 
-    if (this.keysCollected >= KEY_COUNT) {
+    if (this.keysCollected >= this.config.keyCount) {
       this.openGate();
     } else {
       this.spawnNextKey();
@@ -252,7 +256,7 @@ export class GameScene extends Phaser.Scene {
     const score = Math.floor(this.elapsedTime / 1000);
     // BossScene not yet implemented — fall back to GameOverScene
     if (this.scene.get('BossScene')) {
-      this.scene.start('BossScene', { score });
+      this.scene.start('BossScene', { score, difficulty: this.difficulty });
     } else {
       this.scene.start('GameOverScene', { score, victory: true });
     }
@@ -269,14 +273,15 @@ export class GameScene extends Phaser.Scene {
 
   /** Find a random grass tile along the inner edge of the map. */
   private findEdgeSpawnPosition(): { x: number; y: number } | null {
+    const mapTiles = this.config.mapTiles;
     const edges: { row: number; col: number }[] = [];
     const inner = 1; // Just inside the rock border
 
-    for (let i = inner; i < MAP_TILES - inner; i++) {
+    for (let i = inner; i < mapTiles - inner; i++) {
       edges.push({ row: inner, col: i });
-      edges.push({ row: MAP_TILES - 1 - inner, col: i });
+      edges.push({ row: mapTiles - 1 - inner, col: i });
       edges.push({ row: i, col: inner });
-      edges.push({ row: i, col: MAP_TILES - 1 - inner });
+      edges.push({ row: i, col: mapTiles - 1 - inner });
     }
 
     Phaser.Utils.Array.Shuffle(edges);
@@ -303,6 +308,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     const score = Math.floor(this.elapsedTime / 1000);
-    this.scene.start('GameOverScene', { score });
+    this.scene.start('GameOverScene', { score, difficulty: this.difficulty });
   }
 }

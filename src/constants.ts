@@ -1,13 +1,7 @@
 export const TILE_SIZE = 32;
-export const MAP_TILES = 50;
-export const MAP_SIZE = TILE_SIZE * MAP_TILES; // 1600
 
 export const PLAYER_SPEED = 160;
-export const KNIGHT_SPEED_BASE = 90;
-export const KNIGHT_SPEED_MAX = 140;
-export const KNIGHT_SPAWN_INTERVAL = 15000; // ms
 export const KNIGHT_PATH_INTERVAL = 500; // ms
-export const MAX_KNIGHTS = 8;
 
 // Castle
 export const CASTLE_WIDTH = 7;
@@ -15,7 +9,6 @@ export const CASTLE_HEIGHT = 7;
 export const CASTLE_MARGIN = 3;
 
 // Keys
-export const KEY_COUNT = 5;
 export const KEY_MIN_DIST_FROM_SPAWN = 12;
 export const KEY_MIN_DIST_BETWEEN = 8;
 
@@ -23,25 +16,96 @@ export const KEY_MIN_DIST_BETWEEN = 8;
 export const BOSS_ARENA_WIDTH = 640;
 export const BOSS_ARENA_HEIGHT = 480;
 export const FIREBALL_RADIUS = 8;
-export const DRAGON_FIREBALL_SPEED = 200;
 
-// Dragon
+// Dragon (non-difficulty-varying)
 export const DRAGON_SPEED = 70;
 export const DRAGON_BODY_RADIUS = 24;
 export const TRIPLE_FIREBALL_SPREAD = 0.35; // radians (~20°)
-export const ROLL_TELEGRAPH_DURATION = 500;
 export const ROLL_SPEED = 350;
 export const ROLL_DURATION = 800;
-export const SPIN_ATTACK_DURATION = 2000;
-export const SPIN_FIREBALL_COUNT = 12;
-export const SPIN_REVOLUTIONS = 2;
-export const ATTACK_COOLDOWN_MIN = 2000;
-export const ATTACK_COOLDOWN_MAX = 3500;
 
 // Bombs
 export const BOMB_SPAWN_INTERVAL = 30000;
 export const BOMBS_TO_WIN = 3;
 export const BOMB_RADIUS = 12;
+
+// --- Difficulty system ---
+
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+export interface DifficultyConfig {
+  // Overworld
+  mapTiles: number;
+  obstacleDensity: number;
+  keyCount: number;
+  knightSpeedBase: number;
+  knightSpeedMax: number;
+  maxKnights: number;
+  knightSpawnInterval: number;
+  firstKnightDelay: number;
+  // Boss fight
+  fireballSpeed: number;
+  attackCooldownMin: number;
+  attackCooldownMax: number;
+  stunDuration: number;
+  rollTelegraphDuration: number;
+  spinRevolutions: number;
+  spinFireballsPerRev: number;
+}
+
+export const DIFFICULTIES: Record<DifficultyLevel, DifficultyConfig> = {
+  easy: {
+    mapTiles: 40,
+    obstacleDensity: 0.10,
+    keyCount: 3,
+    knightSpeedBase: 70,
+    knightSpeedMax: 110,
+    maxKnights: 5,
+    knightSpawnInterval: 20000,
+    firstKnightDelay: 20000,
+    fireballSpeed: 150,
+    attackCooldownMin: 3000,
+    attackCooldownMax: 5000,
+    stunDuration: 1500,
+    rollTelegraphDuration: 800,
+    spinRevolutions: 1,
+    spinFireballsPerRev: 8,
+  },
+  medium: {
+    mapTiles: 50,
+    obstacleDensity: 0.15,
+    keyCount: 5,
+    knightSpeedBase: 90,
+    knightSpeedMax: 140,
+    maxKnights: 8,
+    knightSpawnInterval: 15000,
+    firstKnightDelay: 15000,
+    fireballSpeed: 200,
+    attackCooldownMin: 2000,
+    attackCooldownMax: 3500,
+    stunDuration: 1000,
+    rollTelegraphDuration: 500,
+    spinRevolutions: 2,
+    spinFireballsPerRev: 12,
+  },
+  hard: {
+    mapTiles: 60,
+    obstacleDensity: 0.15,
+    keyCount: 5,
+    knightSpeedBase: 110,
+    knightSpeedMax: 155,
+    maxKnights: 8,
+    knightSpawnInterval: 10000,
+    firstKnightDelay: 5000,
+    fireballSpeed: 260,
+    attackCooldownMin: 1200,
+    attackCooldownMax: 2500,
+    stunDuration: 500,
+    rollTelegraphDuration: 300,
+    spinRevolutions: 3,
+    spinFireballsPerRev: 16,
+  },
+};
 
 export const COLORS = {
   grass: 0x4a8c2a,

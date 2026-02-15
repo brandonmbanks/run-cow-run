@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, KNIGHT_SPEED_BASE, KNIGHT_PATH_INTERVAL, TILE_SIZE } from '../constants';
+import { COLORS, KNIGHT_PATH_INTERVAL, TILE_SIZE } from '../constants';
 import { Pathfinder } from '../ai/Pathfinder';
 
 export class Knight extends Phaser.GameObjects.Container {
@@ -18,7 +18,7 @@ export class Knight extends Phaser.GameObjects.Container {
     y: number,
     target: Phaser.GameObjects.Container,
     pathfinder: Pathfinder,
-    speed: number = KNIGHT_SPEED_BASE,
+    speed: number = 90,
   ) {
     super(scene, x, y);
     this.target = target;

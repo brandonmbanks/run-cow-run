@@ -4,15 +4,8 @@ import {
   DRAGON_SPEED,
   DRAGON_BODY_RADIUS,
   TRIPLE_FIREBALL_SPREAD,
-  ROLL_TELEGRAPH_DURATION,
   ROLL_SPEED,
   ROLL_DURATION,
-  SPIN_ATTACK_DURATION,
-  SPIN_FIREBALL_COUNT,
-  SPIN_REVOLUTIONS,
-  ATTACK_COOLDOWN_MIN,
-  ATTACK_COOLDOWN_MAX,
-  DRAGON_FIREBALL_SPEED,
 } from '../constants';
 
 export enum DragonState {
@@ -22,6 +15,16 @@ export enum DragonState {
   ROLLING = 'ROLLING',
   STUNNED = 'STUNNED',
   SPIN_ATTACK = 'SPIN_ATTACK',
+}
+
+export interface DragonConfig {
+  cooldownMin: number;
+  cooldownMax: number;
+  stunDuration: number;
+  rollTelegraphDuration: number;
+  spinRevolutions: number;
+  spinFireballsPerRev: number;
+  fireballSpeed: number;
 }
 
 export class Dragon extends Phaser.GameObjects.Container {
@@ -34,6 +37,7 @@ export class Dragon extends Phaser.GameObjects.Container {
 
   private target: Phaser.GameObjects.Container;
   private onFireball: (x: number, y: number, angle: number, speed?: number) => void;
+  private cfg: DragonConfig;
 
   // Roll attack
   private rollTargetX = 0;
@@ -52,10 +56,12 @@ export class Dragon extends Phaser.GameObjects.Container {
     y: number,
     target: Phaser.GameObjects.Container,
     onFireball: (x: number, y: number, angle: number, speed?: number) => void,
+    cfg: DragonConfig,
   ) {
     super(scene, x, y);
     this.target = target;
     this.onFireball = onFireball;
+    this.cfg = cfg;
     this.cooldown = this.randomCooldown();
 
     // --- Visual: top-down dragon ---
@@ -213,7 +219,7 @@ export class Dragon extends Phaser.GameObjects.Container {
     const flash = Math.floor(this.stateTimer / 150) % 2 === 0;
     this.bodyShape.setFillStyle(flash ? 0xff0000 : COLORS.dragon);
 
-    if (this.stateTimer >= ROLL_TELEGRAPH_DURATION) {
+    if (this.stateTimer >= this.cfg.rollTelegraphDuration) {
       this.enterState(DragonState.ROLLING);
     }
   }
@@ -229,28 +235,29 @@ export class Dragon extends Phaser.GameObjects.Container {
     const flash = Math.floor(this.stateTimer / 100) % 2 === 0;
     this.bodyShape.setFillStyle(flash ? 0xaaaaaa : COLORS.dragon);
 
-    if (this.stateTimer >= 1000) {
+    if (this.stateTimer >= this.cfg.stunDuration) {
       this.enterState(DragonState.IDLE);
     }
   }
 
   private updateSpinAttack(delta: number): void {
-    const totalFireballs = SPIN_FIREBALL_COUNT * SPIN_REVOLUTIONS;
-    const progress = this.stateTimer / SPIN_ATTACK_DURATION;
-    this.spinAngle = progress * SPIN_REVOLUTIONS * Math.PI * 2;
+    const totalFireballs = this.cfg.spinFireballsPerRev * this.cfg.spinRevolutions;
+    const spinDuration = 1000 * this.cfg.spinRevolutions; // 1s per revolution
+    const progress = this.stateTimer / spinDuration;
+    this.spinAngle = progress * this.cfg.spinRevolutions * Math.PI * 2;
 
     // Emit fireballs evenly over duration
     const expectedEmitted = Math.floor(progress * totalFireballs);
     while (this.spinFireballsEmitted < expectedEmitted && this.spinFireballsEmitted < totalFireballs) {
-      const fbAngle = (this.spinFireballsEmitted / totalFireballs) * SPIN_REVOLUTIONS * Math.PI * 2;
-      this.onFireball(this.x, this.y, fbAngle, DRAGON_FIREBALL_SPEED);
+      const fbAngle = (this.spinFireballsEmitted / totalFireballs) * this.cfg.spinRevolutions * Math.PI * 2;
+      this.onFireball(this.x, this.y, fbAngle, this.cfg.fireballSpeed);
       this.spinFireballsEmitted++;
     }
 
     // Visual rotation
     this.rotation = this.spinAngle;
 
-    if (this.stateTimer >= SPIN_ATTACK_DURATION) {
+    if (this.stateTimer >= spinDuration) {
       this.enterState(DragonState.IDLE);
     }
   }
@@ -270,11 +277,11 @@ export class Dragon extends Phaser.GameObjects.Container {
   private fireTripleFireball(): void {
     const angle = Phaser.Math.Angle.Between(this.x, this.y, this.target.x, this.target.y);
     for (let i = -1; i <= 1; i++) {
-      this.onFireball(this.x, this.y, angle + i * TRIPLE_FIREBALL_SPREAD);
+      this.onFireball(this.x, this.y, angle + i * TRIPLE_FIREBALL_SPREAD, this.cfg.fireballSpeed);
     }
   }
 
   private randomCooldown(): number {
-    return Phaser.Math.Between(ATTACK_COOLDOWN_MIN, ATTACK_COOLDOWN_MAX);
+    return Phaser.Math.Between(this.cfg.cooldownMin, this.cfg.cooldownMax);
   }
 }

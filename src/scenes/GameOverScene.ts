@@ -5,7 +5,7 @@ export class GameOverScene extends Phaser.Scene {
     super({ key: 'GameOverScene' });
   }
 
-  create(data: { score?: number; victory?: boolean }): void {
+  create(data: { score?: number; victory?: boolean; difficulty?: string }): void {
     const { width, height } = this.scale;
     const score = data.score ?? 0;
     const victory = data.victory ?? false;
@@ -47,7 +47,7 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const restartText = this.add
-      .text(width / 2, height / 2 + 80, 'Tap or Press SPACE to Restart', {
+      .text(width / 2, height / 2 + 80, 'Tap or Press SPACE to Continue', {
         fontSize: '20px',
         color: '#cccccc',
         fontFamily: 'monospace',
@@ -67,6 +67,6 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   private restart(): void {
-    this.scene.start('GameScene');
+    this.scene.start('MenuScene');
   }
 }

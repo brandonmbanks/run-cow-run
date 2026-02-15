@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, DRAGON_FIREBALL_SPEED, FIREBALL_RADIUS } from '../constants';
+import { COLORS, FIREBALL_RADIUS } from '../constants';
 
 export class Fireball extends Phaser.GameObjects.Container {
   declare body: Phaser.Physics.Arcade.Body;
@@ -12,7 +12,7 @@ export class Fireball extends Phaser.GameObjects.Container {
     x: number,
     y: number,
     angle: number,
-    speed: number = DRAGON_FIREBALL_SPEED,
+    speed: number,
   ) {
     super(scene, x, y);
 

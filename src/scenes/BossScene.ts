@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
-import { Dragon, DragonState } from '../entities/Dragon';
+import { Dragon, DragonState, DragonConfig } from '../entities/Dragon';
 import { Fireball } from '../entities/Fireball';
 import {
   COLORS,
@@ -9,6 +9,9 @@ import {
   BOMB_SPAWN_INTERVAL,
   BOMBS_TO_WIN,
   BOMB_RADIUS,
+  DIFFICULTIES,
+  DifficultyLevel,
+  DifficultyConfig,
 } from '../constants';
 
 const WALL_THICKNESS = 16;
@@ -27,12 +30,16 @@ export class BossScene extends Phaser.Scene {
   private hudText!: Phaser.GameObjects.Text;
   private score = 0;
   private isOver = false;
+  private difficulty: DifficultyLevel = 'medium';
+  private config!: DifficultyConfig;
 
   constructor() {
     super({ key: 'BossScene' });
   }
 
-  create(data: { score?: number }): void {
+  create(data: { score?: number; difficulty?: DifficultyLevel }): void {
+    this.difficulty = data.difficulty ?? 'medium';
+    this.config = DIFFICULTIES[this.difficulty];
     this.score = data.score ?? 0;
     this.isOver = false;
     this.bombTimer = 0;
@@ -78,9 +85,18 @@ export class BossScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.walls);
 
     // --- Dragon (top-center) ---
+    const dragonCfg: DragonConfig = {
+      cooldownMin: this.config.attackCooldownMin,
+      cooldownMax: this.config.attackCooldownMax,
+      stunDuration: this.config.stunDuration,
+      rollTelegraphDuration: this.config.rollTelegraphDuration,
+      spinRevolutions: this.config.spinRevolutions,
+      spinFireballsPerRev: this.config.spinFireballsPerRev,
+      fireballSpeed: this.config.fireballSpeed,
+    };
     this.dragon = new Dragon(this, 320, 80, this.player, (x, y, angle, speed?) => {
       this.spawnFireball(x, y, angle, speed);
-    });
+    }, dragonCfg);
     this.dragon.body.setCollideWorldBounds(true);
     this.physics.add.collider(this.dragon as unknown as Phaser.GameObjects.GameObject, this.walls, () => {
       if (this.dragon.getState() === DragonState.ROLLING) {
@@ -160,7 +176,7 @@ export class BossScene extends Phaser.Scene {
   }
 
   private spawnFireball(x: number, y: number, angle: number, speed?: number): void {
-    const fb = new Fireball(this, x, y, angle, speed);
+    const fb = new Fireball(this, x, y, angle, speed ?? this.config.fireballSpeed);
     this.fireballGroup.add(fb);
     fb.launch();
   }
@@ -220,6 +236,7 @@ export class BossScene extends Phaser.Scene {
     this.currentBomb.destroy();
     this.currentBomb = null;
     this.bombsCollected++;
+    this.cameras.main.flash(200, 255, 150, 0);
     this.hudText.setText(`Bombs: ${this.bombsCollected}/${BOMBS_TO_WIN}`);
     this.bombTimer = 0;
 
@@ -237,7 +254,7 @@ export class BossScene extends Phaser.Scene {
 
     this.cameras.main.flash(300, 255, 0, 0);
     this.time.delayedCall(500, () => {
-      this.scene.start('GameOverScene', { score: this.score, victory: false });
+      this.scene.start('GameOverScene', { score: this.score, victory: false, difficulty: this.difficulty });
     });
   }
 
@@ -250,7 +267,7 @@ export class BossScene extends Phaser.Scene {
 
     this.cameras.main.flash(500, 255, 215, 0);
     this.time.delayedCall(800, () => {
-      this.scene.start('GameOverScene', { score: this.score, victory: true });
+      this.scene.start('GameOverScene', { score: this.score, victory: true, difficulty: this.difficulty });
     });
   }
 }

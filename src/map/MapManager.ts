@@ -14,9 +14,9 @@ export class MapManager {
   }
 
   /** Create tileset texture, generate map, and build tilemap layers. */
-  create(spawnCol: number, spawnRow: number): MapData {
+  create(spawnCol: number, spawnRow: number, mapTiles: number, obstacleDensity: number, keyCount: number): MapData {
     this.createTilesetTexture();
-    const mapData = generateMap(spawnCol, spawnRow);
+    const mapData = generateMap(spawnCol, spawnRow, mapTiles, obstacleDensity, keyCount);
     this.grid = mapData.grid;
     this.buildTilemap();
     return mapData;

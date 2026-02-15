@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { DifficultyLevel } from '../constants';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -9,7 +10,7 @@ export class MenuScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     this.add
-      .text(width / 2, height / 3, 'Run Cow Run!', {
+      .text(width / 2, height / 4, 'Run Cow Run!', {
         fontSize: '48px',
         color: '#ffffff',
         fontFamily: 'monospace',
@@ -17,31 +18,51 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const startText = this.add
-      .text(width / 2, height / 2 + 40, 'Tap or Press SPACE to Start', {
+    this.add
+      .text(width / 2, height / 4 + 50, 'Choose Difficulty', {
         fontSize: '20px',
         color: '#cccccc',
         fontFamily: 'monospace',
       })
       .setOrigin(0.5);
 
-    // Pulsing animation on start text
-    this.tweens.add({
-      targets: startText,
-      alpha: 0.3,
-      duration: 800,
-      yoyo: true,
-      repeat: -1,
-    });
+    const buttons: { label: string; difficulty: DifficultyLevel; color: string; key: string }[] = [
+      { label: 'Easy', difficulty: 'easy', color: '#44cc44', key: '1' },
+      { label: 'Medium', difficulty: 'medium', color: '#cccc44', key: '2' },
+      { label: 'Hard', difficulty: 'hard', color: '#cc4444', key: '3' },
+    ];
 
-    // Start on tap/click
-    this.input.once('pointerdown', () => this.startGame());
+    const startY = height / 2 + 10;
+    const spacing = 60;
 
-    // Start on spacebar
-    this.input.keyboard?.once('keydown-SPACE', () => this.startGame());
+    for (let i = 0; i < buttons.length; i++) {
+      const { label, difficulty, color, key } = buttons[i];
+      const y = startY + i * spacing;
+
+      const btn = this.add
+        .text(width / 2, y, `${label} [${key}]`, {
+          fontSize: '32px',
+          color,
+          fontFamily: 'monospace',
+          fontStyle: 'bold',
+          padding: { x: 20, y: 8 },
+          backgroundColor: '#222222',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      btn.on('pointerover', () => btn.setAlpha(0.7));
+      btn.on('pointerout', () => btn.setAlpha(1));
+      btn.on('pointerdown', () => this.startGame(difficulty));
+    }
+
+    // Keyboard shortcuts: 1/2/3
+    this.input.keyboard?.on('keydown-ONE', () => this.startGame('easy'));
+    this.input.keyboard?.on('keydown-TWO', () => this.startGame('medium'));
+    this.input.keyboard?.on('keydown-THREE', () => this.startGame('hard'));
   }
 
-  private startGame(): void {
-    this.scene.start('GameScene');
+  private startGame(difficulty: DifficultyLevel): void {
+    this.scene.start('GameScene', { difficulty });
   }
 }

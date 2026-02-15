@@ -129,7 +129,42 @@ run_cow_run/
 - [x] GameOverScene: handle `{ victory: true }` with gold "VICTORY!" text + subtitle
 - [x] Register BossScene in config.ts
 
-### Phase 8: Polish + Mobile Controls
+### Phase 8: Difficulty Settings
+
+**Files:** src/constants.ts, src/scenes/MenuScene.ts, src/scenes/GameScene.ts, src/scenes/BossScene.ts, src/entities/Dragon.ts, src/scenes/GameOverScene.ts
+
+#### Difficulty Presets
+
+| Setting | Easy | Medium (current) | Hard |
+|---------|------|-------------------|------|
+| **Overworld** | | | |
+| Map size (tiles) | 40×40 | 50×50 | 60×60 |
+| Obstacle density | ~10% | ~15% | ~15% |
+| Keys to collect | 3 | 5 | 5 |
+| Knight speed (base → max) | 70 → 110 | 90 → 140 | 110 → 155 |
+| Max knights | 5 | 8 | 8 |
+| Knight spawn interval | 20s | 15s | 10s |
+| First knight delay | 20s | 15s | 5s |
+| **Boss fight** | | | |
+| Dragon fireball speed | 150 | 200 | 260 |
+| Attack cooldown (min–max) | 3–5s | 2–3.5s | 1.2–2.5s |
+| Dragon stun duration | 1.5s | 1s | 0.5s |
+| Roll telegraph duration | 800ms | 500ms | 300ms |
+| Spin attack (revolutions × fireballs/rev) | 1 × 8 | 2 × 12 | 3 × 16 |
+
+> **Rule:** Knight max speed must always stay below `PLAYER_SPEED` (160) so the cow can always outrun them.
+
+#### Implementation
+
+- [ ] **`src/constants.ts`**: Add `DifficultyLevel` type (`'easy' | 'medium' | 'hard'`), `DifficultyConfig` interface with all varying settings (including `mapTiles`, `obstacleDensity`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`), and 3 preset objects (`DIFFICULTY_EASY`, `DIFFICULTY_MEDIUM`, `DIFFICULTY_HARD`). Existing standalone constants remain for non-difficulty values (tile size, player speed, colors, arena size, etc.)
+- [ ] **`src/scenes/MenuScene.ts`**: Replace "Tap to Start" with three difficulty buttons (Easy / Medium / Hard), styled with distinct colors (green/yellow/red). Each starts `GameScene` with `{ difficulty }` in scene data
+- [ ] **`src/scenes/GameScene.ts`**: Accept `{ difficulty }` in `create()` data. Look up config via difficulty key. Use `config.mapTiles` for world size, `config.obstacleDensity` for map generation, `config.keyCount`, `config.knightSpeedBase`, `config.knightSpeedMax`, `config.maxKnights`, `config.knightSpawnInterval`, `config.firstKnightDelay`. Pass `{ score, difficulty }` to BossScene on castle entry
+- [ ] **`src/map/MapGenerator.ts`**: Accept `mapTiles` and `obstacleDensity` as parameters instead of using hardcoded constants, so GameScene can pass difficulty-appropriate values
+- [ ] **`src/scenes/BossScene.ts`**: Accept `{ score, difficulty }` in `create()` data. Pass config's `attackCooldownMin`, `attackCooldownMax`, `stunDuration`, `fireballSpeed`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev` to Dragon constructor. Use config's `fireballSpeed` when spawning fireballs
+- [ ] **`src/entities/Dragon.ts`**: Accept difficulty-varying values (`cooldownMin`, `cooldownMax`, `stunDuration`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`) via constructor parameters instead of importing constants. Use them in `randomCooldown()`, `updateStunned()`, `updateRollTelegraph()`, and `updateSpinAttack()`
+- [ ] **`src/scenes/GameOverScene.ts`**: Accept `{ difficulty }` in scene data. Restart returns to `MenuScene` instead of directly to `GameScene` (so player can pick difficulty again)
+
+### Phase 9: Polish + Mobile Controls
 
 **Files:** src/ui/HUD.ts, src/ui/VirtualJoystick.ts, update GameOverScene.ts, update GameScene.ts
 
@@ -139,7 +174,7 @@ run_cow_run/
 - [ ] **Game feel**: screen shake on catch, brief invincibility at start
 - [ ] **Scoring**: survive as long as possible, score = seconds survived
 
-### Phase 9: Mobile Optimization
+### Phase 10: Mobile Optimization
 
 - [ ] Object pooling for knights
 - [ ] CSS `touch-action: none` on canvas
@@ -149,9 +184,13 @@ run_cow_run/
 ## Verification
 
 1. `npm run dev` — opens at localhost:8080
-2. Castle visible in corner, collision works
-3. Keys scattered, collectible, HUD updates
-4. Gate blocks until 5 keys, then opens
-5. Boss scene: dodge fireballs 30s → victory, get hit → game over
-6. Full loop: menu → game → collect keys → enter castle → boss → victory/game over → restart
-7. Mobile: virtual joystick, smooth 60fps
+2. Menu shows three difficulty buttons (Easy / Medium / Hard)
+3. Easy: 3 keys, slower knights (max 5), forgiving dragon
+4. Medium: current gameplay unchanged
+5. Hard: faster knights, early spawns, aggressive dragon with short stun
+6. Castle visible in corner, collision works
+7. Keys scattered, collectible, HUD updates
+8. Gate blocks until keys collected, then opens
+9. Boss scene: dodge fireballs, collect bombs → victory, get hit → game over
+10. Full loop: menu → pick difficulty → game → collect keys → enter castle → boss → victory/game over → menu
+11. Mobile: virtual joystick, smooth 60fps
