@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { Knight } from '../entities/Knight';
+import { Key } from '../entities/Key';
 import { MapManager } from '../map/MapManager';
 import { Pathfinder } from '../ai/Pathfinder';
 import {
@@ -8,12 +9,13 @@ import {
   MAP_SIZE,
   MAP_TILES,
   TILE_SIZE,
+  KEY_COUNT,
   KNIGHT_SPAWN_INTERVAL,
   KNIGHT_SPEED_BASE,
   KNIGHT_SPEED_MAX,
   MAX_KNIGHTS,
 } from '../constants';
-import { TILE_GRASS } from '../map/MapGenerator';
+import { TILE_GRASS, MapData } from '../map/MapGenerator';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -26,6 +28,13 @@ export class GameScene extends Phaser.Scene {
   private spawnTimer = 0;
   private gameOver = false;
   private elapsedTime = 0;
+  private mapData!: MapData;
+  private keysCollected = 0;
+  private currentKey: Key | null = null;
+  private keyCollider: Phaser.Physics.Arcade.Collider | null = null;
+  private keysText!: Phaser.GameObjects.Text;
+  private debugGfx!: Phaser.GameObjects.Graphics;
+  private debugVisible = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -36,6 +45,8 @@ export class GameScene extends Phaser.Scene {
     this.knights = [];
     this.spawnTimer = KNIGHT_SPAWN_INTERVAL - 5000;
     this.elapsedTime = 0;
+    this.keysCollected = 0;
+    this.currentKey = null;
 
     // Green world background
     this.cameras.main.setBackgroundColor(COLORS.grass);
@@ -49,7 +60,7 @@ export class GameScene extends Phaser.Scene {
 
     // Generate and render the tilemap
     this.mapManager = new MapManager(this);
-    this.mapManager.create(spawnCol, spawnRow);
+    this.mapData = this.mapManager.create(spawnCol, spawnRow);
 
     // Create pathfinder from obstacle grid
     this.pathfinder = new Pathfinder(this.mapManager.grid);
@@ -84,6 +95,25 @@ export class GameScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
     }) as Record<string, Phaser.Input.Keyboard.Key>;
+
+    // HUD
+    this.keysText = this.add.text(16, 16, `Keys: 0/${KEY_COUNT}`, {
+      fontSize: '18px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setScrollFactor(0).setDepth(100);
+
+    // Debug collision overlay (toggle with F1)
+    this.debugGfx = this.add.graphics().setDepth(99).setVisible(false);
+    this.input.keyboard!.on('keydown-F1', () => {
+      this.debugVisible = !this.debugVisible;
+      this.debugGfx.setVisible(this.debugVisible);
+      if (!this.debugVisible) this.debugGfx.clear();
+    });
+
+    // Spawn the first key
+    this.spawnNextKey();
   }
 
   update(time: number, delta: number): void {
@@ -120,6 +150,56 @@ export class GameScene extends Phaser.Scene {
       this.spawnTimer = 0;
       this.spawnKnight();
     }
+
+    // Debug: draw collision circles (F1 to toggle)
+    if (this.debugVisible) {
+      this.debugGfx.clear();
+      this.debugGfx.lineStyle(2, 0xff0000, 0.8);
+      // Player body
+      const pb = this.player.body;
+      this.debugGfx.strokeCircle(
+        pb.position.x + pb.halfWidth,
+        pb.position.y + pb.halfHeight,
+        pb.halfWidth,
+      );
+      // Current key body
+      if (this.currentKey?.body) {
+        const kb = this.currentKey.body;
+        this.debugGfx.strokeCircle(
+          kb.position.x + kb.halfWidth,
+          kb.position.y + kb.halfHeight,
+          kb.halfWidth,
+        );
+      }
+    }
+  }
+
+  private spawnNextKey(): void {
+    if (this.keysCollected >= KEY_COUNT) return;
+
+    const pos = this.mapData.keyPositions[this.keysCollected];
+    const px = pos.col * TILE_SIZE + TILE_SIZE / 2;
+    const py = pos.row * TILE_SIZE + TILE_SIZE / 2;
+
+    this.currentKey = new Key(this, px, py);
+    this.keyCollider = this.physics.add.overlap(this.player, this.currentKey, () => this.onKeyCollected());
+  }
+
+  private onKeyCollected(): void {
+    if (!this.currentKey) return;
+
+    // Remove the overlap collider before destroying the key
+    if (this.keyCollider) {
+      this.physics.world.removeCollider(this.keyCollider);
+      this.keyCollider = null;
+    }
+
+    this.currentKey.destroy();
+    this.currentKey = null;
+    this.keysCollected++;
+    this.keysText.setText(`Keys: ${this.keysCollected}/${KEY_COUNT}`);
+
+    this.spawnNextKey();
   }
 
   private spawnKnight(): void {

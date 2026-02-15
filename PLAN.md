@@ -100,14 +100,15 @@ run_cow_run/
 - [x] Pathfinder accepts drawbridge tiles so knights can walk on them
 - [x] `MapData` interface returns grid, keyPositions, gateTiles, drawbridgeTiles, castleCorner
 
-### Phase 5: Collectible Keys
+### Phase 5: Collectible Keys ✅
 
 **Files:** src/constants.ts, src/map/MapGenerator.ts, src/entities/Key.ts, src/scenes/GameScene.ts
 
 - [x] Key constants (`KEY_COUNT=5`, distances, colors) in constants
 - [x] `placeKeys()` in MapGenerator — scatter 5 keys on grass tiles far from spawn and each other, positions returned in `MapData`
-- [ ] Key entity: yellow circle + black stroke + shaft + teeth, static body, bobbing tween
-- [ ] GameScene: key static group, overlap collection, `keysCollected` counter, HUD text (`Keys: 0/5`)
+- [x] Key entity: yellow circle + black stroke + shaft + teeth, static body, bobbing tween
+- [x] GameScene: spawn one key at a time, overlap collection with proper collider cleanup, `keysCollected` counter, HUD text (`Keys: 0/5`)
+- [x] Debug collision overlay toggled with F1
 
 ### Phase 6: Gate + Castle Entry
 
