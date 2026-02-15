@@ -129,7 +129,7 @@ run_cow_run/
 - [x] GameOverScene: handle `{ victory: true }` with gold "VICTORY!" text + subtitle
 - [x] Register BossScene in config.ts
 
-### Phase 8: Difficulty Settings
+### Phase 8: Difficulty Settings ✅
 
 **Files:** src/constants.ts, src/scenes/MenuScene.ts, src/scenes/GameScene.ts, src/scenes/BossScene.ts, src/entities/Dragon.ts, src/scenes/GameOverScene.ts
 
@@ -156,30 +156,32 @@ run_cow_run/
 
 #### Implementation
 
-- [ ] **`src/constants.ts`**: Add `DifficultyLevel` type (`'easy' | 'medium' | 'hard'`), `DifficultyConfig` interface with all varying settings (including `mapTiles`, `obstacleDensity`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`), and 3 preset objects (`DIFFICULTY_EASY`, `DIFFICULTY_MEDIUM`, `DIFFICULTY_HARD`). Existing standalone constants remain for non-difficulty values (tile size, player speed, colors, arena size, etc.)
-- [ ] **`src/scenes/MenuScene.ts`**: Replace "Tap to Start" with three difficulty buttons (Easy / Medium / Hard), styled with distinct colors (green/yellow/red). Each starts `GameScene` with `{ difficulty }` in scene data
-- [ ] **`src/scenes/GameScene.ts`**: Accept `{ difficulty }` in `create()` data. Look up config via difficulty key. Use `config.mapTiles` for world size, `config.obstacleDensity` for map generation, `config.keyCount`, `config.knightSpeedBase`, `config.knightSpeedMax`, `config.maxKnights`, `config.knightSpawnInterval`, `config.firstKnightDelay`. Pass `{ score, difficulty }` to BossScene on castle entry
-- [ ] **`src/map/MapGenerator.ts`**: Accept `mapTiles` and `obstacleDensity` as parameters instead of using hardcoded constants, so GameScene can pass difficulty-appropriate values
-- [ ] **`src/scenes/BossScene.ts`**: Accept `{ score, difficulty }` in `create()` data. Pass config's `attackCooldownMin`, `attackCooldownMax`, `stunDuration`, `fireballSpeed`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev` to Dragon constructor. Use config's `fireballSpeed` when spawning fireballs
-- [ ] **`src/entities/Dragon.ts`**: Accept difficulty-varying values (`cooldownMin`, `cooldownMax`, `stunDuration`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`) via constructor parameters instead of importing constants. Use them in `randomCooldown()`, `updateStunned()`, `updateRollTelegraph()`, and `updateSpinAttack()`
-- [ ] **`src/scenes/GameOverScene.ts`**: Accept `{ difficulty }` in scene data. Restart returns to `MenuScene` instead of directly to `GameScene` (so player can pick difficulty again)
+- [x] **`src/constants.ts`**: Add `DifficultyLevel` type (`'easy' | 'medium' | 'hard'`), `DifficultyConfig` interface with all varying settings (including `mapTiles`, `obstacleDensity`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`), and 3 preset objects (`DIFFICULTY_EASY`, `DIFFICULTY_MEDIUM`, `DIFFICULTY_HARD`). Existing standalone constants remain for non-difficulty values (tile size, player speed, colors, arena size, etc.)
+- [x] **`src/scenes/MenuScene.ts`**: Replace "Tap to Start" with three difficulty buttons (Easy / Medium / Hard), styled with distinct colors (green/yellow/red). Each starts `GameScene` with `{ difficulty }` in scene data
+- [x] **`src/scenes/GameScene.ts`**: Accept `{ difficulty }` in `create()` data. Look up config via difficulty key. Use `config.mapTiles` for world size, `config.obstacleDensity` for map generation, `config.keyCount`, `config.knightSpeedBase`, `config.knightSpeedMax`, `config.maxKnights`, `config.knightSpawnInterval`, `config.firstKnightDelay`. Pass `{ score, difficulty }` to BossScene on castle entry
+- [x] **`src/map/MapGenerator.ts`**: Accept `mapTiles` and `obstacleDensity` as parameters instead of using hardcoded constants, so GameScene can pass difficulty-appropriate values
+- [x] **`src/scenes/BossScene.ts`**: Accept `{ score, difficulty }` in `create()` data. Pass config's `attackCooldownMin`, `attackCooldownMax`, `stunDuration`, `fireballSpeed`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev` to Dragon constructor. Use config's `fireballSpeed` when spawning fireballs
+- [x] **`src/entities/Dragon.ts`**: Accept difficulty-varying values (`cooldownMin`, `cooldownMax`, `stunDuration`, `rollTelegraphDuration`, `spinRevolutions`, `spinFireballsPerRev`) via constructor parameters instead of importing constants. Use them in `randomCooldown()`, `updateStunned()`, `updateRollTelegraph()`, and `updateSpinAttack()`
+- [x] **`src/scenes/GameOverScene.ts`**: Accept `{ difficulty }` in scene data. Restart returns to `MenuScene` instead of directly to `GameScene` (so player can pick difficulty again)
 
 ### Phase 9: Polish + Mobile Controls
 
 **Files:** src/ui/HUD.ts, src/ui/VirtualJoystick.ts, update GameOverScene.ts, update GameScene.ts
 
 - [ ] **HUD**: survival timer + score text, pinned with `setScrollFactor(0)`
-- [ ] **Virtual joystick**: floating (appears where you touch), left 60% of screen, base circle + thumb circle, outputs normalized forceX/forceY
-- [ ] **Game over**: display survival time, track high score in localStorage, tap to restart
+- [ ] **Virtual joystick**: only created on touch devices (`this.sys.game.device.input.touch`). Floating (appears where you touch), left 60% of screen, base circle + thumb circle, outputs normalized forceX/forceY. GameScene and BossScene merge joystick input with keyboard input into the same `player.move(vx, vy)` call
+- [ ] **Game over**: display survival time, tap to restart
 - [ ] **Game feel**: screen shake on catch, brief invincibility at start
-- [ ] **Scoring**: survive as long as possible, score = seconds survived
 
 ### Phase 10: Mobile Optimization
 
-- [ ] Object pooling for knights
 - [ ] CSS `touch-action: none` on canvas
 - [ ] FPS counter for dev testing
 - [ ] Smaller map on small screens
+
+## Future Enhancements
+
+- **Object pooling** for knights/fireballs — reuse deactivated instances instead of create/destroy. Not needed at current entity counts (<50), but would help if enemy counts scale up significantly.
 
 ## Verification
 

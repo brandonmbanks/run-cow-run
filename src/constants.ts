@@ -94,7 +94,7 @@ export const DIFFICULTIES: Record<DifficultyLevel, DifficultyConfig> = {
     keyCount: 5,
     knightSpeedBase: 110,
     knightSpeedMax: 155,
-    maxKnights: 8,
+    maxKnights: 12,
     knightSpawnInterval: 10000,
     firstKnightDelay: 5000,
     fireballSpeed: 260,
