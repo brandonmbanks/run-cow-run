@@ -318,9 +318,14 @@ export class GameScene extends Phaser.Scene {
       edges.push({ row: i, col: mapTiles - 1 - inner });
     }
 
+    const minDist = TILE_SIZE * 8;
     Phaser.Utils.Array.Shuffle(edges);
     for (const { row, col } of edges) {
       if (this.mapManager.grid[row][col] === TILE_GRASS) {
+        const sx = col * TILE_SIZE + TILE_SIZE / 2;
+        const sy = row * TILE_SIZE + TILE_SIZE / 2;
+        const dist = Phaser.Math.Distance.Between(sx, sy, this.player.x, this.player.y);
+        if (dist < minDist) continue;
         return {
           x: col * TILE_SIZE + TILE_SIZE / 2,
           y: row * TILE_SIZE + TILE_SIZE / 2,
